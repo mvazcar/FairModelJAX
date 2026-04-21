@@ -98,9 +98,9 @@ why the Cowles tradition and DSGE diverged:
 ## Development
 
 Written with [Claude Code](https://claude.ai/code) (Claude Opus 4.7 Max).
-Humans picked the agenda and architecture; the model wrote the Python.
 
 ## License
 
-MIT for the code under `src/` and `tests/`. Fair's bundled originals under
-`raw_source/` keep his copyright — see [LICENSE](LICENSE).
+The Python code under `src/` and `tests/` is released into the public
+domain — do whatever you want with it. Fair's bundled originals under
+`raw_source/` keep his copyright. See [LICENSE](LICENSE).
