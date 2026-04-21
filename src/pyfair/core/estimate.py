@@ -169,7 +169,6 @@ def two_sls_ar1_bounded(
     Returns:
       ``(beta, rho, iterations)``.
     """
-    T = y.shape[0]
     ZtZ_inv = jnp.linalg.inv(Z.T @ Z)
     PZ_X_est = Z @ ZtZ_inv @ Z.T @ X
     PZ_X_ext = jnp.vstack([X_presample[None, :], PZ_X_est])
@@ -237,7 +236,6 @@ def two_sls_ar2_bounded(
     # Import scipy lazily — only AR(2) bounded search needs it.
     from scipy.optimize import minimize
 
-    T = y.shape[0]
     y_ext = jnp.concatenate([y_presample, y])
     X_ext = jnp.vstack([X_presample, X])
     ZtZ_inv = jnp.linalg.inv(Z.T @ Z)

@@ -34,10 +34,19 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import TYPE_CHECKING
 
 import jax
 import jax.numpy as jnp
+
+if TYPE_CHECKING:
+    # Type-only imports — keep them out of the runtime import graph. The
+    # functions below also do `import polars as pl` and
+    # `from . import model as us_model` locally, so runtime behaviour is
+    # unchanged; this block only helps static tools resolve the
+    # forward-reference annotations.
+    import polars as pl
+    from . import model as us_model
 
 _LOG = logging.getLogger(__name__)
 
@@ -1049,7 +1058,6 @@ def parse_fmexog(path) -> list[ExogRule]:
     current_var: str | None = None
     current_rule: str | None = None
     current_values: list[float] = []
-    in_explicit: bool = False   # True when collecting an explicit per-quarter list
 
     def flush_current():
         if current_var is None:
@@ -1071,7 +1079,6 @@ def parse_fmexog(path) -> list[ExogRule]:
         if upper.startswith("SMPL") or upper == "CHANGEVAR" or upper == "RETURN":
             flush_current()
             current_var, current_rule, current_values = None, None, []
-            in_explicit = False
             continue
 
         # Pure numeric line → accumulate under the current variable.
@@ -1091,11 +1098,9 @@ def parse_fmexog(path) -> list[ExogRule]:
         current_values = []
         if len(parts) >= 2 and parts[1].upper() in _EXOG_RULES:
             current_rule = parts[1].upper()
-            in_explicit = False
         else:
             # Explicit-list form: "VAR ;" followed by one value per quarter.
             current_rule = "EXPLICIT"
-            in_explicit = True
 
     flush_current()
     return rules
@@ -1175,21 +1180,12 @@ def extend_frame_for_forecast(
     forecast_periods = _periods_between(forecast_start, forecast_end)
     n_fc = len(forecast_periods)
 
-    # Start from the raw historical frame (strip derived/lag columns — we'll
-    # recompute them after extending).
-    raw_cols = [c for c in frame.columns
-                if c == "period"
-                or (c.isupper() and "_lag" not in c
-                    and c not in {"T", "CNST2CS", "CNST2L2", "CNST2KK", "TBL2", "C"}
-                    and not c.startswith("L") or c in {"LAM", "LM"})
-                ]
-    # Simpler filter: keep everything except computed-later columns.
-    exclude_prefix_or_eq = {"T", "C", "CNST2CS", "CNST2L2", "CNST2KK", "TBL2"}
-    computed_later_columns = set()
-    # GENR output names from us_model._GENR_SPECS
-    for name, _fn in us_model._GENR_SPECS:
-        computed_later_columns.add(name)
-    # Regime dummies + T + TBL2 + C
+    # Start from the raw historical frame: keep everything except columns we
+    # are going to recompute below (GENR outputs, regime dummies, trend,
+    # and explicit lag columns). The alternative WIP filter we tried (based
+    # on column-name prefixes) was too blunt; this dict-based filter is
+    # exact.
+    computed_later_columns: set[str] = {name for name, _fn in us_model._GENR_SPECS}
     computed_later_columns |= {"T", "C", "CNST2CS", "CNST2L2", "CNST2KK", "TBL2"}
 
     keep_cols = [
@@ -1371,7 +1367,6 @@ def simulate(
     Returns:
       ``SimulationResult`` with per-period solved values and diagnostics.
     """
-    import polars as pl
 
     params = _flatten_params_for_solve(estimation_results)
     eqs_for_solve = [r.equation for r in estimation_results

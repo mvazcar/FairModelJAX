@@ -37,7 +37,6 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
-from typing import Iterable
 
 import jax.numpy as jnp
 import polars as pl
@@ -564,7 +563,6 @@ def estimate_all_shr(frame: pl.DataFrame | None = None) -> list[dict]:
     ``"STRICT"`` (<5e-5), ``"CLOSE"`` (<5e-3), ``"LOOSE"`` (<1.0), or
     ``"FAILED"``.
     """
-    from . import model as mc_model
     # Make sure OUT has been parsed for these equation numbers.
     if not any(eq.number in REFERENCE_PARAMS_MC for eq in EQUATIONS_SHR[:5]):
         parse_mc_out()  # idempotent

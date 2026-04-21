@@ -2189,10 +2189,11 @@ _NLEQ_SPECS: list[tuple[str, int]] = [
     ("BE", 188), ("DE", 198), ("SW", 218), ("IR", 238), ("SP", 258),
     ("NZ", 268), ("ID", 328), ("PA", 348), ("TH", 368), ("ME", 418),
 ]
+_NLEQ_EQUATIONS: dict[str, MCEquation] = {}
 for _country, _num in _NLEQ_SPECS:
     _dep = f"{_country}LPXA"
     _rhs = f"{_country}LPXB"
-    _eq = MCEquation(
+    _NLEQ_EQUATIONS[_country] = MCEquation(
         country=_country, number=_num, dependent=_dep,
         regressors=(_rhs,), instruments=(_rhs,),
         has_ar1=False, has_ar2=False, is_nleq=True,
@@ -2201,7 +2202,6 @@ for _country, _num in _NLEQ_SPECS:
         notes="Fair NLOLS (DFP); we use Levenberg-Marquardt. Non-convex — "
               "some countries land at a lower-SSE local minimum than Fair's DFP.",
     )
-    locals()[f"_eq_list_{_country}"] = _eq  # stash for registry append below.
 
 
 # US MC-only additions — EQ 31 extends the standalone US block with an
@@ -2229,24 +2229,24 @@ EQUATIONS_BY_COUNTRY: dict[str, list[MCEquation]] = {
     "FI": EQUATIONS_FI, "AS": EQUATIONS_AS, "SO": EQUATIONS_SO,
     "KO": EQUATIONS_KO,
     # Annual-lag countries (shift(4) GENRs, use *A averages).
-    "BE": EQUATIONS_BE + [_eq_list_BE],
-    "DE": EQUATIONS_DE + [_eq_list_DE],
+    "BE": EQUATIONS_BE + [_NLEQ_EQUATIONS["BE"]],
+    "DE": EQUATIONS_DE + [_NLEQ_EQUATIONS["DE"]],
     "NO": EQUATIONS_NO,
-    "SW": EQUATIONS_SW + [_eq_list_SW],
+    "SW": EQUATIONS_SW + [_NLEQ_EQUATIONS["SW"]],
     "GR": EQUATIONS_GR,
-    "IR": EQUATIONS_IR + [_eq_list_IR],
+    "IR": EQUATIONS_IR + [_NLEQ_EQUATIONS["IR"]],
     "PO": EQUATIONS_PO,
-    "SP": EQUATIONS_SP + [_eq_list_SP],
-    "NZ": EQUATIONS_NZ + [_eq_list_NZ],
+    "SP": EQUATIONS_SP + [_NLEQ_EQUATIONS["SP"]],
+    "NZ": EQUATIONS_NZ + [_NLEQ_EQUATIONS["NZ"]],
     "SA": EQUATIONS_SA, "CO": EQUATIONS_CO, "JO": EQUATIONS_JO,
-    "ID": EQUATIONS_ID + [_eq_list_ID],
+    "ID": EQUATIONS_ID + [_NLEQ_EQUATIONS["ID"]],
     "MA": EQUATIONS_MA,
-    "PA": EQUATIONS_PA + [_eq_list_PA],
+    "PA": EQUATIONS_PA + [_NLEQ_EQUATIONS["PA"]],
     "PH": EQUATIONS_PH,
-    "TH": EQUATIONS_TH + [_eq_list_TH],
+    "TH": EQUATIONS_TH + [_NLEQ_EQUATIONS["TH"]],
     "CH": EQUATIONS_CH,
     "AR": EQUATIONS_AR, "BR": EQUATIONS_BR, "CE": EQUATIONS_CE,
-    "ME": EQUATIONS_ME + [_eq_list_ME],
+    "ME": EQUATIONS_ME + [_NLEQ_EQUATIONS["ME"]],
     "PE": EQUATIONS_PE,
 }
 

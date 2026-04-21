@@ -36,5 +36,13 @@ packages = ["src/pyfair"]
 line-length = 100
 target-version = "py313"
 
+[tool.ruff.lint.per-file-ignores]
+# The package __init__ deliberately sets jax.config.update(...) before any
+# JAX arrays are created, so the historic-name reexports below it are not
+# at the top of the file. That is intentional — silence E402 here.
+# F401 on those reexports is also intentional (they're part of the
+# public back-compat surface).
+"src/pyfair/__init__.py" = ["E402", "F401"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

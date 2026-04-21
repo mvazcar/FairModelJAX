@@ -666,7 +666,6 @@ def test_mc_identities_hold_on_historical_frame():
     relative error < 1e-3. Validates the GENR template, the trade-share
     forward-average convention, and the identity factory all at once.
     """
-    import polars as pl  # local import to keep this block self-contained
     prefixes = [c.prefix for c in mc_countries.row_countries() if c.prefix != "EU"]
     frame = mc_model.build_frame_mc(countries=tuple(prefixes))
     residuals = mc_solve.verify_identities_on_frame(frame, "2010Q1")

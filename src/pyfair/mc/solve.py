@@ -889,7 +889,6 @@ def simulate_country_path(
 
     working_frame = frame
     results: list[dict] = []
-    state_vars = _country_state_order(prefix)
 
     for period in periods:
         solved, iters, rnorm = solve_country_one_period(

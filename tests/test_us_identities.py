@@ -10,7 +10,6 @@ transcription, not an economic failure of the model.
 """
 from __future__ import annotations
 
-import math
 
 import jax.numpy as jnp
 import pytest

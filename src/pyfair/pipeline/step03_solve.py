@@ -52,7 +52,7 @@ class SimInputs(NamedTuple):
 class SimOutputs(NamedTuple):
     """Per-quarter simulation result; stacked along time by ``lax.scan``."""
     C: jnp.ndarray
-    I: jnp.ndarray
+    I: jnp.ndarray  # noqa: E741  (Fair's IS-model investment variable is canonically "I")
     Y: jnp.ndarray
     newton_iters: jnp.ndarray
     newton_residual: jnp.ndarray
