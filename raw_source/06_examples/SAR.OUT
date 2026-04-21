@@ -1,0 +1,3575 @@
+                                                                                
+Enter "INPUT FILE=fn ;" (no quotes): 
+  Fair-Parke Program   November 11, 2013
+
+MAIN:  Space allowed in SPA    =  40000000
+       Space allowed in LA     =   2000000
+       Space allowed in DPA    =     20000
+       Space allowed in LSTACK =    500000
+       Space allowed in L      =      4000
+SPACE MAXCOV=55 MAXS=7 FIRSTPER=1952.1 LASTPER=1989.2                         
+ MAXCOEF=30 MAXFSR=60;                                                        
+SARGENT'S MODEL                                                         
+Space allocations are:
+ MAXVAR     =       100
+ MAXS       =         7
+ MAXCOEF    =        30
+ MAXFSR     =        60
+ MAXCOV     =        55
+Quarterly data. FIRSTPER =  1952.1 LASTPER =  1989.2
+Initial space used:
+                Used          Allocated
+  SPA          237431      40000000
+  LA           609051       2000000
+  DPA             110         20000
+@                                                                             
+@ Load the data, which are in data set SAR.DAT.                               
+@                                                                             
+LOADDATA FILE=SAR.DAT;                                                        
+SMPL    1952.1   1989.2 ;                                                     
+Sample period is now  1952.1 to  1989.2 Internally:     1 to   150
+LOAD UN       ;                                                               
+Name UN       not found.
+Name added to list: UN      
+LOAD NF       ;                                                               
+Name NF       not found.
+Name added to list: NF      
+LOAD Y        ;                                                               
+Name Y        not found.
+Name added to list: Y       
+LOAD P        ;                                                               
+Name P        not found.
+Name added to list: P       
+LOAD R        ;                                                               
+Name R        not found.
+Name added to list: R       
+LOAD N        ;                                                               
+Name N        not found.
+Name added to list: N       
+LOAD M        ;                                                               
+Name M        not found.
+Name added to list: M       
+LOAD POP      ;                                                               
+Name POP      not found.
+Name added to list: POP     
+LOAD T        ;                                                               
+Name T        not found.
+Name added to list: T       
+END;                                                                          
+@                                                                             
+@ Set up the model, first without the price expectations variable             
+@ in equations 1 and 2.  Equations 6 and 7 are the equations for              
+@ the exogenous variables.  Agents are assumed to use these                   
+@ equations to form their expectations of M and @ POP.  Note that             
+@ MAXS in the SPACE command is 7: there are 5 regular stochastic              
+@ equations in the model and 2 exogenous variable equations.                  
+@                                                                             
+SMPL 1952.1 1989.2;                                                           
+Sample period is now  1952.1 to  1989.2 Internally:     1 to   150
+CREATE CNST=1;                                                                
+Name added to list: CNST            
+CREATE N=NF-UN+POP;                                                           
+CREATE MACT=M;                                                                
+Name added to list: MACT            
+CREATE POPACT=POP;                                                            
+Name added to list: POPACT          
+CREATE MMP=M-P;                                                               
+Name added to list: MMP             
+EQ 1 UN CNST T UN(-1) UN(-2) UN(-3) UN(-4);                                   
+EQUATION 1  UN  
+   RHS     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  
+EQ 2 NF CNST T UN NF(-1) NF(-2) NF(-3) NF(-4);                                
+EQUATION 2  NF  
+   RHS     CNST  T  UN  NF(-1)  NF(-2)  NF(-3)  NF(-4)  
+EQ 3 Y CNST T N N(-1) N(-2) N(-3) N(-4) RHO=2;                                
+EQUATION 3  Y  RHO=2  
+   RHS     CNST  T  N  N(-1)  N(-2)  N(-3)  N(-4)  
+EQ 4 MMP CNST T R R(-1) R(-2) R(-3) R(-4) R(-5) R(-6) R(-7)                   
+ Y Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) Y(-6) Y(-7) RHO=2;                           
+EQUATION 4  MMP  RHO=2  
+   RHS     CNST  T  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  R(-6)  
+   RHS     R(-7)  Y  Y(-1)  Y(-2)  Y(-3)  Y(-4)  Y(-5)  Y(-6)  
+   RHS     Y(-7)  
+LHS P=M-MMP;                                                                  
+EQ 5 R CNST T R(-1) R(-2) R(-3) R(-4);                                        
+EQUATION 5  R  
+   RHS     CNST  T  R(-1)  R(-2)  R(-3)  R(-4)  
+IDENT N=NF-UN+POP;                                                            
+EQ 6 M CNST T M(-1) M(-2);                                                    
+EQUATION 6  M  
+   RHS     CNST  T  M(-1)  M(-2)  
+EQ 7 POP CNST T POP(-1) POP(-2);                                              
+EQUATION 7  POP  
+   RHS     CNST  T  POP(-1)  POP(-2)  
+EQ 1 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3)              
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3)               
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5)            
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2);                               
+EQUATION 1  UN  
+   RHS     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+EQ 2 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3)              
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3)               
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5)            
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2);                               
+EQUATION 2  NF  
+   RHS     CNST  T  UN  NF(-1)  NF(-2)  NF(-3)  NF(-4)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+EQ 3 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3)              
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3)               
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5)            
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2);                               
+EQUATION 3  Y  RHO=2  
+   RHS     CNST  T  N  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+EQ 4 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3)              
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3)               
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5)            
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2);                               
+EQUATION 4  MMP  RHO=2  
+   RHS     CNST  T  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  R(-6)  
+   RHS     R(-7)  Y  Y(-1)  Y(-2)  Y(-3)  Y(-4)  Y(-5)  Y(-6)  
+   RHS     Y(-7)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+EQ 5 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3)              
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3)               
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5)            
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2);                               
+EQUATION 5  R  
+   RHS     CNST  T  R(-1)  R(-2)  R(-3)  R(-4)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+@                                                                             
+@ Estimate the model without the expectations variables.                      
+@                                                                             
+SMPL 1954.3 1989.2;                                                           
+Sample period is now  1954.3 to  1989.2 Internally:    11 to   150
+2SLS; EST 1-7; END;                                                           
+
+Equation number =    1
+**********************
+
+Dependent variable = UN      
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+First stage regressors 
+
+   10 CNST     (  0)
+    9 T        (  0)
+    1 UN       ( -1)
+    1 UN       ( -2)
+    1 UN       ( -3)
+    1 UN       ( -4)
+    2 NF       ( -1)
+    2 NF       ( -2)
+    2 NF       ( -3)
+    2 NF       ( -4)
+    6 N        ( -1)
+    6 N        ( -2)
+    6 N        ( -3)
+    6 N        ( -4)
+    6 N        ( -5)
+    6 N        ( -6)
+    5 R        (  0)
+    5 R        ( -1)
+    5 R        ( -2)
+    5 R        ( -3)
+    5 R        ( -4)
+    5 R        ( -5)
+    5 R        ( -6)
+    5 R        ( -7)
+    5 R        ( -8)
+    5 R        ( -9)
+    3 Y        ( -1)
+    3 Y        ( -2)
+    3 Y        ( -3)
+    3 Y        ( -4)
+    3 Y        ( -5)
+    3 Y        ( -6)
+    3 Y        ( -7)
+    3 Y        ( -8)
+    3 Y        ( -9)
+    8 POP      (  0)
+    7 M        (  0)
+   13 MMP      ( -1)
+   13 MMP      ( -2)
+
+Mean of dependent variable        0.059306694
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)       0.002366376       0.001018722   2.32289     1.000000
+    9 T       (  0)       0.000010457       0.000007840   1.33390    80.500000
+    1 UN      ( -1)       1.702945126       0.085534376  19.90948     0.059345
+    1 UN      ( -2)      -0.880371659       0.166313948  -5.29343     0.059348
+    1 UN      ( -3)       0.045896499       0.164019269   0.27982     0.059231
+    1 UN      ( -4)       0.077377316       0.082567908   0.93714     0.059033
+
+SE of equation            =     0.002937315
+Sum of squared residuals  = 0.115612802E-02  -0.754098952E-08
+Average absolute error    =     0.002188020
+Sum of ABS residuals      = 0.306322771    
+R squared                 =   0.96720
+Durbin-Watson statistic   =   2.00180
+Overid test: p-value      = 0.00000         (df =  33)
+SMPL and No. Obs.         = 1954.3   1989.2    140
+UDU for 2SLS              = 0.732591849E-03
+
+Equation number =    2
+**********************
+
+Dependent variable = NF      
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+First stage regressors 
+
+   10 CNST     (  0)
+    9 T        (  0)
+    1 UN       ( -1)
+    1 UN       ( -2)
+    1 UN       ( -3)
+    1 UN       ( -4)
+    2 NF       ( -1)
+    2 NF       ( -2)
+    2 NF       ( -3)
+    2 NF       ( -4)
+    6 N        ( -1)
+    6 N        ( -2)
+    6 N        ( -3)
+    6 N        ( -4)
+    6 N        ( -5)
+    6 N        ( -6)
+    5 R        (  0)
+    5 R        ( -1)
+    5 R        ( -2)
+    5 R        ( -3)
+    5 R        ( -4)
+    5 R        ( -5)
+    5 R        ( -6)
+    5 R        ( -7)
+    5 R        ( -8)
+    5 R        ( -9)
+    3 Y        ( -1)
+    3 Y        ( -2)
+    3 Y        ( -3)
+    3 Y        ( -4)
+    3 Y        ( -5)
+    3 Y        ( -6)
+    3 Y        ( -7)
+    3 Y        ( -8)
+    3 Y        ( -9)
+    8 POP      (  0)
+    7 M        (  0)
+   13 MMP      ( -1)
+   13 MMP      ( -2)
+
+Mean of dependent variable       -0.487588939
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)      -0.006684737       0.011731224  -0.56982     1.000000
+    9 T       (  0)       0.000034937       0.000018022   1.93860    80.500000
+    1 UN      (  0)      -0.042644617       0.021879612  -1.94906     0.059307
+    2 NF      ( -1)       0.937871285       0.086655892  10.82294    -0.488453
+    2 NF      ( -2)      -0.005471163       0.116784253  -0.04685    -0.489287
+    2 NF      ( -3)       0.040614559       0.114130601   0.35586    -0.490148
+    2 NF      ( -4)       0.011917516       0.084741892   0.14063    -0.490973
+
+SE of equation            =     0.003205903
+Sum of squared residuals  = 0.136694897E-02  -0.118157658E-07
+Average absolute error    =     0.002313458
+Sum of ABS residuals      = 0.323884160    
+R squared                 =   0.99312
+Durbin-Watson statistic   =   2.00462
+Overid test: p-value      = 0.00787         (df =  32)
+SMPL and No. Obs.         = 1954.3   1989.2    140
+UDU for 2SLS              = 0.531957040E-03
+
+Equation number =    3
+**********************
+
+Dependent variable = Y       
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+First stage regressors 
+
+   10 CNST     (  0)
+    9 T        (  0)
+    1 UN       ( -1)
+    1 UN       ( -2)
+    1 UN       ( -3)
+    1 UN       ( -4)
+    2 NF       ( -1)
+    2 NF       ( -2)
+    2 NF       ( -3)
+    2 NF       ( -4)
+    6 N        ( -1)
+    6 N        ( -2)
+    6 N        ( -3)
+    6 N        ( -4)
+    6 N        ( -5)
+    6 N        ( -6)
+    5 R        (  0)
+    5 R        ( -1)
+    5 R        ( -2)
+    5 R        ( -3)
+    5 R        ( -4)
+    5 R        ( -5)
+    5 R        ( -6)
+    5 R        ( -7)
+    5 R        ( -8)
+    5 R        ( -9)
+    3 Y        ( -1)
+    3 Y        ( -2)
+    3 Y        ( -3)
+    3 Y        ( -4)
+    3 Y        ( -5)
+    3 Y        ( -6)
+    3 Y        ( -7)
+    3 Y        ( -8)
+    3 Y        ( -9)
+    8 POP      (  0)
+    7 M        (  0)
+   13 MMP      ( -1)
+   13 MMP      ( -2)
+
+Iter   Rhos:  1            2
+   1     0.958783245 -0.022206554
+   2     0.965246601  0.007125005
+   3     0.944654483  0.029670628
+   4     0.937727500  0.037672033
+   5     0.935256144  0.040794279
+   6     0.934286055  0.042174997
+   7     0.933855554  0.042871242
+   8     0.933638453  0.043263496
+   9     0.933516467  0.043502484
+  10     0.933442424  0.043655445
+  11     0.933395209  0.043756262
+  12     0.933364185  0.043823872
+  13     0.933343429  0.043869685
+  14     0.933329389  0.043900927
+  15     0.933319826  0.043922319
+  16     0.933313284  0.043937005
+  17     0.933308795  0.043947105
+  18     0.933305710  0.043954058
+
+Number of iterations for RHO =   18
+
+
+Mean of dependent variable        7.809170549
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)       4.271074100       0.989824575   4.31498     1.000000
+    9 T       (  0)       0.003073621       0.001562460   1.96717    80.500000
+    6 N       (  0)       1.392865444       0.264366790   5.26869     4.415867
+    6 N       ( -1)      -0.220944359       0.224154334  -0.98568     4.411128
+    6 N       ( -2)      -0.165794762       0.187862888  -0.88253     4.406449
+    6 N       ( -3)      -0.215176958       0.184411927  -1.16683     4.401859
+    6 N       ( -4)      -0.037437385       0.161737028  -0.23147     4.397377
+    0 RHO     ( -1)       0.933305710       0.102945183   9.06605     0.000000
+    0 RHO     ( -2)       0.043954058       0.101879516   0.43143     0.000000
+
+SE of equation            =     0.008180052
+Sum of squared residuals  = 0.876563519E-02   0.268699266E-04
+Average absolute error    =     0.006257477
+Sum of ABS residuals      = 0.876046786    
+R squared                 =   0.99934
+Durbin-Watson statistic   =   1.98148
+Overid test: p-value      = 0.03101         (df =  32)
+SMPL and No. Obs.         = 1954.3   1989.2    140
+UDU for 2SLS              = 0.303580907E-02
+
+Equation number =    4
+**********************
+
+Dependent variable = MMP     
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+First stage regressors 
+
+   10 CNST     (  0)
+    9 T        (  0)
+    1 UN       ( -1)
+    1 UN       ( -2)
+    1 UN       ( -3)
+    1 UN       ( -4)
+    2 NF       ( -1)
+    2 NF       ( -2)
+    2 NF       ( -3)
+    2 NF       ( -4)
+    6 N        ( -1)
+    6 N        ( -2)
+    6 N        ( -3)
+    6 N        ( -4)
+    6 N        ( -5)
+    6 N        ( -6)
+    5 R        (  0)
+    5 R        ( -1)
+    5 R        ( -2)
+    5 R        ( -3)
+    5 R        ( -4)
+    5 R        ( -5)
+    5 R        ( -6)
+    5 R        ( -7)
+    5 R        ( -8)
+    5 R        ( -9)
+    3 Y        ( -1)
+    3 Y        ( -2)
+    3 Y        ( -3)
+    3 Y        ( -4)
+    3 Y        ( -5)
+    3 Y        ( -6)
+    3 Y        ( -7)
+    3 Y        ( -8)
+    3 Y        ( -9)
+    8 POP      (  0)
+    7 M        (  0)
+   13 MMP      ( -1)
+   13 MMP      ( -2)
+
+Iter   Rhos:  1            2
+   1     0.694996776  0.182511949
+   2     0.765440003  0.169441519
+   3     0.763440342  0.178086144
+   4     0.763318949  0.180718913
+   5     0.763384680  0.181796649
+   6     0.763438345  0.182303653
+   7     0.763470229  0.182556439
+   8     0.763487841  0.182685897
+   9     0.763497319  0.182753078
+  10     0.763502362  0.182788177
+  11     0.763505031  0.182806580
+  12     0.763506439  0.182816245
+
+Number of iterations for RHO =   12
+
+
+Mean of dependent variable        6.281802643
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)       3.457466803       2.268910246   1.52384     1.000000
+    9 T       (  0)       0.001626881       0.002521781   0.64513    80.500000
+    5 R       (  0)      -0.007079989       0.003445484  -2.05486     7.463024
+    5 R       ( -1)      -0.012057984       0.003723445  -3.23839     7.415809
+    5 R       ( -2)       0.001222485       0.004077840   0.29979     7.367762
+    5 R       ( -3)      -0.008958470       0.003933624  -2.27741     7.322214
+    5 R       ( -4)       0.004175163       0.003943856   1.05865     7.274405
+    5 R       ( -5)       0.000214722       0.004063928   0.05284     7.228071
+    5 R       ( -6)      -0.010910980       0.004008541  -2.72193     7.181738
+    5 R       ( -7)       0.003048486       0.003838932   0.79410     7.130119
+    3 Y       (  0)       0.436060483       0.282927279   1.54125     7.809171
+    3 Y       ( -1)      -0.314512276       0.184596342  -1.70378     7.801461
+    3 Y       ( -2)       0.242689254       0.158491384   1.53125     7.793806
+    3 Y       ( -3)      -0.153619605       0.160786679  -0.95542     7.786319
+    3 Y       ( -4)       0.029661593       0.156459225   0.18958     7.778937
+    3 Y       ( -5)      -0.143509497       0.157533129  -0.91098     7.771647
+    3 Y       ( -6)       0.215568678       0.149853545   1.43853     7.764351
+    3 Y       ( -7)       0.058892750       0.133079340   0.44254     7.757004
+    0 RHO     ( -1)       0.763506439       0.091743930   8.32215     0.000000
+    0 RHO     ( -2)       0.182816245       0.091006912   2.00882     0.000000
+
+SE of equation            =     0.014659308
+Sum of squared residuals  = 0.257874365E-01  -0.399133719E-04
+Average absolute error    =     0.009650110
+Sum of ABS residuals      =  1.35101538    
+R squared                 =   0.97705
+Durbin-Watson statistic   =   2.03754
+Overid test: p-value      = 0.00000         (df =  21)
+SMPL and No. Obs.         = 1954.3   1989.2    140
+UDU for 2SLS              = 0.162936084E-01
+
+Equation number =    5
+**********************
+
+Dependent variable = R       
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+First stage regressors 
+
+   10 CNST     (  0)
+    9 T        (  0)
+    1 UN       ( -1)
+    1 UN       ( -2)
+    1 UN       ( -3)
+    1 UN       ( -4)
+    2 NF       ( -1)
+    2 NF       ( -2)
+    2 NF       ( -3)
+    2 NF       ( -4)
+    6 N        ( -1)
+    6 N        ( -2)
+    6 N        ( -3)
+    6 N        ( -4)
+    6 N        ( -5)
+    6 N        ( -6)
+    5 R        (  0)
+    5 R        ( -1)
+    5 R        ( -2)
+    5 R        ( -3)
+    5 R        ( -4)
+    5 R        ( -5)
+    5 R        ( -6)
+    5 R        ( -7)
+    5 R        ( -8)
+    5 R        ( -9)
+    3 Y        ( -1)
+    3 Y        ( -2)
+    3 Y        ( -3)
+    3 Y        ( -4)
+    3 Y        ( -5)
+    3 Y        ( -6)
+    3 Y        ( -7)
+    3 Y        ( -8)
+    3 Y        ( -9)
+    8 POP      (  0)
+    7 M        (  0)
+   13 MMP      ( -1)
+   13 MMP      ( -2)
+
+Mean of dependent variable        7.463023671
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)       0.169075475       0.083027620   2.03638     1.000000
+    9 T       (  0)       0.003896609       0.001946280   2.00208    80.500000
+    5 R       ( -1)       1.227527225       0.084107589  14.59473     7.415809
+    5 R       ( -2)      -0.296057196       0.134019478  -2.20906     7.367762
+    5 R       ( -3)       0.250327038       0.134670212   1.85882     7.322214
+    5 R       ( -4)      -0.243938321       0.085348668  -2.85814     7.274405
+
+SE of equation            =     0.384252440
+Sum of squared residuals  =  19.7850917      -0.244527727E-05
+Average absolute error    =     0.234823482
+Sum of ABS residuals      =  32.8752875    
+R squared                 =   0.98582
+Durbin-Watson statistic   =   1.98772
+Overid test: p-value      = 0.00000         (df =  33)
+SMPL and No. Obs.         = 1954.3   1989.2    140
+UDU for 2SLS              =  19.7850917    
+
+Equation number =    6
+**********************
+
+Dependent variable = M       
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+Mean of dependent variable        5.631123919
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)       0.120294783       0.053400438   2.25269     1.000000
+    9 T       (  0)       0.000494074       0.000167838   2.94376    80.500000
+    7 M       ( -1)       0.755785119       0.084221301   8.97380     5.618122
+    7 M       ( -2)       0.218547282       0.083209995   2.62645     5.605025
+
+SE of equation            =     0.015015402
+Sum of squared residuals  = 0.306628741E-01   0.275648802E-07
+Average absolute error    =     0.010962860
+Sum of ABS residuals      =  1.53480041    
+R squared                 =   0.99934
+Durbin-Watson statistic   =   1.97677
+SMPL and No. Obs.         = 1954.3   1989.2    140
+
+Equation number =    7
+**********************
+
+Dependent variable = POP     
+
+ 1954.3 -   1989.2,    0 missing obs.,  140 obs. used.
+
+Mean of dependent variable        4.962762762
+
+                     Coef est             SE           T statistic      Mean
+   10 CNST    (  0)       0.015327950       0.022765487   0.67330     1.000000
+    9 T       (  0)       0.000011945       0.000020571   0.58065    80.500000
+    8 POP     ( -1)       1.774666309       0.054627413  32.48674     4.958925
+    8 POP     ( -2)      -0.777779907       0.054811957 -14.18997     4.955084
+
+SE of equation            =     0.000671789
+Sum of squared residuals  = 0.613768557E-04   0.805890230E-06
+Average absolute error    =     0.000429886
+Sum of ABS residuals      = 0.601840965E-01
+R squared                 =   0.99998
+Durbin-Watson statistic   =   2.34293
+SMPL and No. Obs.         = 1954.3   1989.2    140
+@                                                                             
+@ Add the expectations variables.  Note that 99 is used for the               
+@ lead, because the price expectations variable enters                        
+@ contemporaneously.                                                          
+@                                                                             
+EQ 1 UN CNST T UN(-1) UN(-2) UN(-3) UN(-4) P P(99);                           
+EQUATION 1  UN  
+   RHS     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  P  P(99)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+EQ 2 NF CNST T UN NF(-1) NF(-2) NF(-3) NF(-4) P P(99);                        
+EQUATION 2  NF  
+   RHS     CNST  T  UN  NF(-1)  NF(-2)  NF(-3)  NF(-4)  P  
+   RHS     P(99)  
+   FSR     CNST  T  UN(-1)  UN(-2)  UN(-3)  UN(-4)  NF(-1)  
+   FSR     NF(-2)  NF(-3)  NF(-4)  N(-1)  N(-2)  N(-3)  N(-4)  
+   FSR     N(-5)  N(-6)  R  R(-1)  R(-2)  R(-3)  R(-4)  R(-5)  
+   FSR     R(-6)  R(-7)  R(-8)  R(-9)  Y(-1)  Y(-2)  Y(-3)  
+   FSR     Y(-4)  Y(-5)  Y(-6)  Y(-7)  Y(-8)  Y(-9)  POP  M  
+   FSR     MMP(-1)  MMP(-2)  
+@                                                                             
+@ Set initial values for the coefficients of P.                               
+@                                                                             
+COEF;                                                                         
+COEF(   7,   1) =      -0.02000000
+COEF(   8,   2) =       0.02000000
+@                                                                             
+@ In each equation the coefficient of P equals minus the                      
+@ coefficient of P(99), so impose this constraint.                            
+@                                                                             
+READCONSTR FILE=KEYBOARD;                                                     
+Information on constraints read from KEYBOARD        
+CTC COEF(8,1)=-COEF(7,1);                                                     
+CTC COEF(9,2)=-COEF(8,2);                                                     
+PRINTMODEL;                                                                   
+               THE STRUCTURAL MODEL
+               ********************
+
+
+             VALUE           NAME     LAG       NUM
+
+UN       EQUATION    1
+          0.0023663761    1  CNST               1
+          0.0000104574    2  T                  2
+          1.7029451262    3  UN       (-1)      3
+         -0.8803716588    4  UN       (-2)      4
+          0.0458964988    5  UN       (-3)      5
+          0.0773773156    6  UN       (-4)      6
+         -0.0200000000    7  P                  7
+          0.0200000000    8  P       RE 0    CCCCC
+
+NF       EQUATION    2
+         -0.0066847366    1  CNST               8
+          0.0000349369    2  T                  9
+         -0.0426446168    3  UN                10
+          0.9378712852    4  NF       (-1)     11
+         -0.0054711628    5  NF       (-2)     12
+          0.0406145591    6  NF       (-3)     13
+          0.0119175160    7  NF       (-4)     14
+          0.0200000000    8  P                 15
+         -0.0200000000    9  P       RE 0    CCCCC
+
+Y        EQUATION    3
+          4.2710741003    1  CNST              16
+          0.0030736208    2  T                 17
+          1.3928654444    3  N                 18
+         -0.2209443589    4  N        (-1)     19
+         -0.1657947625    5  N        (-2)     20
+         -0.2151769576    6  N        (-3)     21
+         -0.0374373854    7  N        (-4)     22
+          0.9333057098    8  RHO      (-1)     23
+          0.0439540581    9  RHO      (-2)     24
+
+MMP      EQUATION    4
+          3.4574668028    1  CNST              25
+          0.0016268810    2  T                 26
+         -0.0070799888    3  R                 27
+         -0.0120579839    4  R        (-1)     28
+          0.0012224850    5  R        (-2)     29
+         -0.0089584695    6  R        (-3)     30
+          0.0041751632    7  R        (-4)     31
+          0.0002147216    8  R        (-5)     32
+         -0.0109109798    9  R        (-6)     33
+          0.0030484858   10  R        (-7)     34
+          0.4360604829   11  Y                 35
+         -0.3145122762   12  Y        (-1)     36
+          0.2426892544   13  Y        (-2)     37
+         -0.1536196045   14  Y        (-3)     38
+          0.0296615934   15  Y        (-4)     39
+         -0.1435094970   16  Y        (-5)     40
+          0.2155686777   17  Y        (-6)     41
+          0.0588927501   18  Y        (-7)     42
+          0.7635064394   19  RHO      (-1)     43
+          0.1828162452   20  RHO      (-2)     44
+
+R        EQUATION    5
+          0.1690754751    1  CNST              45
+          0.0038966094    2  T                 46
+          1.2275272250    3  R        (-1)     47
+         -0.2960571963    4  R        (-2)     48
+          0.2503270384    5  R        (-3)     49
+         -0.2439383211    6  R        (-4)     50
+
+M        EQUATION    6
+          0.1202947830    1  CNST              51
+          0.0004940741    2  T                 52
+          0.7557851193    3  M        (-1)     53
+          0.2185472823    4  M        (-2)     54
+
+POP      EQUATION    7
+          0.0153279495    1  CNST              55
+          0.0000119447    2  T                 56
+          1.7746663094    3  POP      (-1)     57
+         -0.7777799070    4  POP      (-2)     58
+WRITECOEF FILE=SARCOEF2.BIN;                                                  
+Coefficient matrix written to data set SARCOEF2.BIN    
+@                                                                             
+@ Set up the Jacobian.                                                        
+@                                                                             
+JACOB DERIV(1,1)=1;                                                           
+JACOB DERIV(4,1)=-COEF(7,1);                                                  
+JACOB DERIV(2,2)=1;                                                           
+JACOB DERIV(4,2)=-COEF(8,2);                                                  
+JACOB DERIV(1,2)=-COEF(4,2);                                                  
+JACOB DERIV(3,3)=1;                                                           
+JACOB DERIV(6,3)=-COEF(3,3);                                                  
+JACOB DERIV(4,4)=-1;                                                          
+JACOB DERIV(3,4)=-COEF(11,4);                                                 
+JACOB DERIV(5,5)=1;                                                           
+JACOB DERIV(6,6)=1;                                                           
+JACOB DERIV(2,6)=-1;                                                          
+JACOB DERIV(1,6)=1;                                                           
+@                                                                             
+@ Set up the model for solution purposes.  Note that the                      
+@ FILEEXOG option is used for M and POP.                                      
+@                                                                             
+SETUPSOLVE NOMSG NOMISS MAXCHECK=4 TOLALL=.00001;                             
+SETUPSOLVE options are:
+MAXITERS =     100
+MINITERS =       1
+MAXCHECK =       4
+TOLALL   =      0.000010000000
+DAMPALL  =      1.000000000000
+MAXERR   =       0
+NOMISS
+-TOLALLABS
+NOMSG
+-DEBUGPRINT
+-TESTEQS
+SETUPRE FILEENDO=KEYBOARD H=0 FILEEXOG=KEYBOARD NOMSG2                        
+ TOL2=.00002;                                                                 
+SETUPRE options are:
+H           =     0
+KFIRST      =     0
+KLAST       =     0
+JFIRST      =     0
+JLAST       =     0
+ALTRHO      =     0
+DAMP        =  1.0000000
+
+Names of expectational variables:
+P             4
+
+Names of exogenous expectational vars.
+M             7
+
+Names of exogenous expectational vars.
+POP           8
+MAXITERS2   =   100
+TOL2        =    0.000020000000
+TOL3        =    0.003000000000
+TOL4        =    0.004000000000
+-FIRSTONLY
+-SMALLEXOG
+-ABS2
+-ABS3
+-ABS4
+NOMSG2
+-NOMSG3
+-NOMSG4
+-NOMSGLIMIT2
+-NOMSGLIMIT3
+-NOMSGLIMIT4
+Warning. Because future observations are needed for a current-period solution,
+the last period that can be solved for is  1989.2 given the value of LASTPER.
+SETUPFIMLRE STEPSIZEDER=.001;                                                 
+SETUPFIMLRE options are:
+DAMPCOEF    =    1.000000000000
+TOLCOEF     =    0.002000000000
+STEPSIZEDER =    0.001000000000
+@                                                                             
+@ Estimate the model by FIML.  Note that the FILEFIXED option                 
+@ is used to tell the program not to estimate equations 6 and 7.              
+@ In addition, the coefficients of equation 5 are not                         
+@ estimated---see the discussion in Sections 5.4 in Fair (1984)               
+@ for why the equation is not estimated.  Some of the less                    
+@ important coefficients in equations 1-4 are also not                        
+@ estimated by FIML.  This is done to save on computer time.                  
+@                                                                             
+FIML FILEFIXED=KEYBOARD MAXITERS=20 ;                                         
+Number of nonzero Jacobian elements =       13
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS        13
+
+NUMBER OF JACOBIAN EQUATIONS                6
+
+
+IA VECTOR
+
+   1   3   6   8  10  11  14
+
+
+JA VECTOR
+
+   1   4   1   2   4   3   6   3   4   5   1   2   6
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  140
+FIML test function evaluation. F =      3077.144365    
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.702945126   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.880371659   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377316   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010457   2 T                  5 **    1   7    0.8050E+02   9
+      -0.020000000   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002366376   1 CONSTANT           7 **    2   7    0.1000E+01  10
+       0.020000000   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.937871285   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000034937   2 T                 13 **    1  16    0.8050E+02   9
+      -0.042644617   3 UN                14 **    1  16    0.5931E-01   1
+       0.020000000   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.006684737   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.020000000   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.003073621   2 T                 18 **    1  26    0.8050E+02   2
+       1.392865444   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.933305710   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       4.271074100   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+       0.001626881   2 T                 27 **    1  46    0.8050E+02   2
+      -0.007079989   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.436060483  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.763506439  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.182816245  20 RHO-2             45 **    3  46    0.0000E+00   3
+       3.457466803   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+
+                1    objective function evaluations
+     3077.144365     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.70994   0.004   1  -0.87904  -0.002   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.178   5   0.00729  -1.365   6
+   0.00202  -0.146   7  -0.00729  -1.365   8   0.93595  -0.002   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00004   0.047  13  -0.04898   0.149  14   0.06848   2.424  15
+  -0.00738   0.104  16  -0.06848   2.424  17   0.00311   0.010  18
+   1.45067   0.042  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.93209  -0.001  24
+   0.04395   0.000  25   4.00035  -0.063  26   0.00159  -0.024  27
+  -0.00814   0.150  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.49010   0.124  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.76690   0.004  44   0.18717   0.024  45
+   3.04092  -0.120  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              108    objective function evaluations
+     3079.490041     objective function value
+     2.345675346     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    2
+   1.70412  -0.003   1  -0.87642  -0.003   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.160   5   0.01619   1.219   6
+   0.00232   0.146   7  -0.01619   1.219   8   0.93188  -0.004   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00004   0.062  13  -0.06016   0.228  14   0.07175   0.048  15
+  -0.00894   0.212  16  -0.07175   0.048  17   0.00284  -0.085  18
+   1.54208   0.063  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91967  -0.013  24
+   0.04395   0.000  25   3.60440  -0.099  26   0.00123  -0.227  27
+  -0.00742  -0.089  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.55291   0.128  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75698  -0.013  44   0.19132   0.022  45
+   2.56411  -0.157  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              221    objective function evaluations
+     3080.434783     objective function value
+    0.9447424326     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    3
+   1.69915  -0.003   1  -0.87499  -0.002   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.340   5   0.01829   0.130   6
+   0.00231  -0.004   7  -0.01829   0.130   8   0.93096  -0.001   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00004   0.143  13  -0.06304   0.048  14   0.08540   0.190  15
+  -0.00961   0.074  16  -0.08540   0.190  17   0.00243  -0.145  18
+   1.58365   0.027  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91940   0.000  24
+   0.04395   0.000  25   3.45264  -0.042  26   0.00079  -0.358  27
+  -0.00706  -0.048  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.60497   0.094  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.76430   0.010  44   0.19421   0.015  45
+   2.18898  -0.146  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              340    objective function evaluations
+     3081.074803     objective function value
+    0.6400200478     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    4
+   1.69707  -0.001   1  -0.87384  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.112   5   0.02277   0.245   6
+   0.00232   0.006   7  -0.02277   0.245   8   0.92786  -0.003   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.103  13  -0.06337   0.005  14   0.08948   0.048  15
+  -0.01144   0.190  16  -0.08948   0.048  17   0.00227  -0.064  18
+   1.60971   0.016  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91794  -0.002  24
+   0.04395   0.000  25   3.34954  -0.030  26  -0.00009  -1.109  27
+  -0.00552  -0.219  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.69751   0.153  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75506  -0.012  44   0.19820   0.021  45
+   1.52278  -0.304  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              466    objective function evaluations
+     3081.543702     objective function value
+    0.4688986449     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    5
+   1.69570  -0.001   1  -0.87356   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.037   5   0.02500   0.098   6
+   0.00236   0.016   7  -0.02500   0.098   8   0.92338  -0.005   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.044  13  -0.05875  -0.073  14   0.09823   0.098  15
+  -0.01402   0.226  16  -0.09823   0.098  17   0.00221  -0.025  18
+   1.61702   0.005  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91756   0.000  24
+   0.04395   0.000  25   3.32442  -0.007  26  -0.00034   2.994  27
+  -0.00528  -0.042  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.73734   0.057  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75500   0.000  44   0.19939   0.006  45
+   1.23155  -0.191  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              595    objective function evaluations
+     3081.757878     objective function value
+    0.2141761320     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    6
+   1.69687   0.001   1  -0.87355   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.083   5   0.02564   0.025   6
+   0.00236   0.001   7  -0.02564   0.025   8   0.92169  -0.002   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.012  13  -0.05905   0.005  14   0.09794  -0.003  15
+  -0.01498   0.068  16  -0.09794  -0.003  17   0.00230   0.039  18
+   1.60827  -0.005  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91725   0.000  24
+   0.04395   0.000  25   3.35933   0.011  26  -0.00060   0.765  27
+  -0.00544   0.031  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.76479   0.037  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75403  -0.001  44   0.19952   0.001  45
+   1.04096  -0.155  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              721    objective function evaluations
+     3081.863891     objective function value
+    0.1060125285     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    7
+   1.69724   0.000   1  -0.87339   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.011   5   0.02532  -0.013   6
+   0.00229  -0.028   7  -0.02532  -0.013   8   0.92226   0.001   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.003  13  -0.06040   0.023  14   0.09807   0.001  15
+  -0.01462  -0.024  16  -0.09807   0.001  17   0.00231   0.002  18
+   1.60114  -0.004  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91799   0.001  24
+   0.04395   0.000  25   3.39148   0.010  26  -0.00071   0.169  27
+  -0.00555   0.020  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.77873   0.018  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75373   0.000  44   0.19919  -0.002  45
+   0.94488  -0.092  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              849    objective function evaluations
+     3081.893554     objective function value
+    0.2966331258E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    8
+   1.69711   0.000   1  -0.87264  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.028   5   0.02567   0.014   6
+   0.00225  -0.019   7  -0.02567   0.014   8   0.92341   0.001   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.010  13  -0.05923  -0.019  14   0.09990   0.019  15
+  -0.01409  -0.036  16  -0.09990   0.019  17   0.00233   0.012  18
+   1.59374  -0.005  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91849   0.001  24
+   0.04395   0.000  25   3.42209   0.009  26  -0.00086   0.218  27
+  -0.00564   0.015  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.78697   0.011  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75242  -0.002  44   0.19814  -0.005  45
+   0.89527  -0.053  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              976    objective function evaluations
+     3081.920559     objective function value
+    0.2700484690E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    9
+   1.69477  -0.001   1  -0.87096  -0.002   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.002   5   0.02899   0.130   6
+   0.00228   0.011   7  -0.02899   0.130   8   0.92417   0.001   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.010  13  -0.05961   0.006  14   0.10289   0.030  15
+  -0.01360  -0.035  16  -0.10289   0.030  17   0.00239   0.024  18
+   1.57964  -0.009  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91827   0.000  24
+   0.04395   0.000  25   3.47895   0.017  26  -0.00114   0.323  27
+  -0.00515  -0.087  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.81305   0.033  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75257   0.000  44   0.19553  -0.013  45
+   0.71357  -0.203  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1106    objective function evaluations
+     3081.952334     objective function value
+    0.3177575238E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   10
+   1.69309  -0.001   1  -0.86979  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.019   5   0.02894  -0.002   6
+   0.00233   0.023   7  -0.02894  -0.002   8   0.92461   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.005  13  -0.06082   0.020  14   0.10397   0.011  15
+  -0.01330  -0.022  16  -0.10397   0.011  17   0.00247   0.036  18
+   1.57287  -0.004  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91736  -0.001  24
+   0.04395   0.000  25   3.49989   0.006  26  -0.00131   0.155  27
+  -0.00513  -0.002  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.82917   0.020  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75482   0.003  44   0.19341  -0.011  45
+   0.60536  -0.152  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1232    objective function evaluations
+     3081.983491     objective function value
+    0.3115631583E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   11
+   1.69180  -0.001   1  -0.86907  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.019   5   0.02980   0.029   6
+   0.00237   0.016   7  -0.02980   0.029   8   0.92515   0.001   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.004  13  -0.06154   0.012  14   0.10441   0.004  15
+  -0.01300  -0.023  16  -0.10441   0.004  17   0.00254   0.028  18
+   1.56462  -0.005  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91677  -0.001  24
+   0.04395   0.000  25   3.52984   0.009  26  -0.00140   0.066  27
+  -0.00504  -0.017  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.83669   0.009  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75498   0.000  44   0.19196  -0.007  45
+   0.55453  -0.084  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1360    objective function evaluations
+     3081.996071     objective function value
+    0.1257985346E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   12
+   1.69159   0.000   1  -0.86860  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.003   5   0.03001   0.007   6
+   0.00235  -0.008   7  -0.03001   0.007   8   0.92516   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.004  13  -0.06174   0.003  14   0.10474   0.003  15
+  -0.01296  -0.003  16  -0.10474   0.003  17   0.00256   0.008  18
+   1.56087  -0.002  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91680   0.000  24
+   0.04395   0.000  25   3.54418   0.004  26  -0.00143   0.019  27
+  -0.00509   0.008  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.83961   0.003  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.75655   0.002  44   0.18926  -0.014  45
+   0.53463  -0.036  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1491    objective function evaluations
+     3082.000547     objective function value
+    0.4475994699E-02 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   13
+   1.69048  -0.001   1  -0.86772  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.009   5   0.03121   0.040   6
+   0.00237   0.009   7  -0.03121   0.040   8   0.92525   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.001  13  -0.06184   0.002  14   0.10582   0.010  15
+  -0.01291  -0.004  16  -0.10582   0.010  17   0.00259   0.011  18
+   1.55817  -0.002  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91631  -0.001  24
+   0.04395   0.000  25   3.55306   0.003  26  -0.00153   0.071  27
+  -0.00494  -0.028  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.84752   0.009  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.76185   0.007  44   0.18505  -0.022  45
+   0.48028  -0.102  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1619    objective function evaluations
+     3082.009973     objective function value
+    0.9426644368E-02 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   14
+   1.68873  -0.001   1  -0.86620  -0.002   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.007   5   0.03164   0.014   6
+   0.00240   0.011   7  -0.03164   0.014   8   0.92555   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.001  13  -0.06232   0.008  14   0.10751   0.016  15
+  -0.01272  -0.015  16  -0.10751   0.016  17   0.00264   0.019  18
+   1.55284  -0.003  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91579  -0.001  24
+   0.04395   0.000  25   3.57173   0.005  26  -0.00165   0.080  27
+  -0.00477  -0.034  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.86306   0.018  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.76776   0.008  44   0.17870  -0.034  45
+   0.36726  -0.235  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1747    objective function evaluations
+     3082.020441     objective function value
+    0.1046792262E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   15
+   1.68803   0.000   1  -0.86544  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.002   5   0.03214   0.016   6
+   0.00239  -0.003   7  -0.03214   0.016   8   0.92526   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06309   0.012  14   0.10739  -0.001  15
+  -0.01281   0.007  16  -0.10739  -0.001  17   0.00266   0.006  18
+   1.55178  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91570   0.000  24
+   0.04395   0.000  25   3.57523   0.001  26  -0.00168   0.019  27
+  -0.00477  -0.002  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.87165   0.010  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77215   0.006  44   0.17474  -0.022  45
+   0.30173  -0.178  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             1877    objective function evaluations
+     3082.026539     objective function value
+    0.6098315500E-02 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   16
+   1.68736   0.000   1  -0.86500  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.003   5   0.03221   0.002   6
+   0.00240   0.003   7  -0.03221   0.002   8   0.92524   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06277  -0.005  14   0.10811   0.007  15
+  -0.01285   0.003  16  -0.10811   0.007  17   0.00264  -0.008  18
+   1.55109   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91553   0.000  24
+   0.04395   0.000  25   3.58044   0.001  26  -0.00169   0.006  27
+  -0.00469  -0.017  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.87641   0.005  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77488   0.004  44   0.17260  -0.012  45
+   0.26411  -0.125  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             2007    objective function evaluations
+     3082.030711     objective function value
+    0.4171259278E-02 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   17
+   1.68703   0.000   1  -0.86450  -0.001   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.007   5   0.03258   0.011   6
+   0.00238  -0.007   7  -0.03258   0.011   8   0.92530   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.002  13  -0.06300   0.004  14   0.10874   0.006  15
+  -0.01282  -0.003  16  -0.10874   0.006  17   0.00264   0.001  18
+   1.55068   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91583   0.000  24
+   0.04395   0.000  25   3.58226   0.001  26  -0.00175   0.031  27
+  -0.00463  -0.011  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88240   0.007  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77745   0.003  44   0.17040  -0.013  45
+   0.22093  -0.164  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             2144    objective function evaluations
+     3082.032389     objective function value
+    0.1678490770E-02 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   18
+   1.68681   0.000   1  -0.86438   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.010   5   0.03257   0.000   6
+   0.00238   0.000   7  -0.03257   0.000   8   0.92531   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.002  13  -0.06286  -0.002  14   0.10851  -0.002  15
+  -0.01283   0.001  16  -0.10851  -0.002  17   0.00262  -0.008  18
+   1.55267   0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91591   0.000  24
+   0.04395   0.000  25   3.57543  -0.002  26  -0.00177   0.011  27
+  -0.00461  -0.005  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88521   0.003  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77772   0.000  44   0.17011  -0.002  45
+   0.20025  -0.094  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             2272    objective function evaluations
+     3082.033147     objective function value
+    0.7580761021E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   19
+   1.68686   0.000   1  -0.86437   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.000   5   0.03271   0.004   6
+   0.00238  -0.001   7  -0.03271   0.004   8   0.92528   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06266  -0.003  14   0.10863   0.001  15
+  -0.01286   0.002  16  -0.10863   0.001  17   0.00262   0.000  18
+   1.55270   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91591   0.000  24
+   0.04395   0.000  25   3.57553   0.000  26  -0.00177   0.004  27
+  -0.00459  -0.005  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88559   0.000  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77781   0.000  44   0.17000  -0.001  45
+   0.19770  -0.013  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             2400    objective function evaluations
+     3082.033302     objective function value
+    0.1546659232E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   20
+   1.68687   0.000   1  -0.86439   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.000   5   0.03267  -0.001   6
+   0.00238   0.000   7  -0.03267  -0.001   8   0.92521   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06267   0.000  14   0.10866   0.000  15
+  -0.01289   0.003  16  -0.10866   0.000  17   0.00261   0.000  18
+   1.55293   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91594   0.000  24
+   0.04395   0.000  25   3.57467   0.000  26  -0.00178   0.001  27
+  -0.00459   0.000  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88610   0.001  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77783   0.000  44   0.16996   0.000  45
+   0.19393  -0.019  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+             2530    objective function evaluations
+     3082.033369     objective function value
+    0.6681105651E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.686874130   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864390206   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010414   2 T                  5 **    1   7    0.8050E+02   9
+       0.032666966   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375121   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032666966   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925208087   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049968   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062671095   3 UN                14 **    1  16    0.5931E-01   1
+       0.108655779   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012891965   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108655779   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002614853   2 T                 18 **    1  26    0.8050E+02   2
+       1.552925958   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915939447   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.574666593   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001775093   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004592706   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886104661  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777833947  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169957820  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.193933225   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Estimate the COV matrix.                                                    
+@                                                                             
+FIML FILEFIXED=KEYBOARD MAXITERS=0 COV;                                       
+Number of nonzero Jacobian elements =       13
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS        13
+
+NUMBER OF JACOBIAN EQUATIONS                6
+
+
+IA VECTOR
+
+   1   3   6   8  10  11  14
+
+
+JA VECTOR
+
+   1   4   1   2   4   3   6   3   4   5   1   2   6
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  140
+FIML test function evaluation. F =      3082.033369    
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.686874130   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864390206   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010414   2 T                  5 **    1   7    0.8050E+02   9
+       0.032666966   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375121   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032666966   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925208087   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049968   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062671095   3 UN                14 **    1  16    0.5931E-01   1
+       0.108655779   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012891965   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108655779   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002614853   2 T                 18 **    1  26    0.8050E+02   2
+       1.552925958   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915939447   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.574666593   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001775093   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004592706   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886104661  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777833947  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169957820  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.193933225   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+    0.1000000000E-04    0.1000000000E-03
+FIML covariance matrix routine
+    0.1000000000E-04    0.1000000000E-03
+     3082.033269     FLOW     3082.033359     FHIGH     3082.033369     FTOP
+
+  COV#  B#  IPP#    F DIFF         COEF PCT         UMEAN
+ 
+    1    1    3   0.239859E-04   0.625000E-04   -0.16668E-07 ------- FINAL F
+    2    2    4   0.307797E-04   0.125000E-03   -0.16676E-07 ------- FINAL F
+    3    5    2   0.261563E-04   0.300000E-02   -0.16674E-07 ------- FINAL F
+    4    6    7   0.495546E-04   0.900000E-02   -0.16732E-07 ------- FINAL F
+    5    7    1   0.579281E-04   0.100000E-02   -0.22783E-05 ------- FINAL F
+    6    9   11   0.395909E-04   0.625000E-04   -0.44974E-06 ------- FINAL F
+    7   13    9   0.386674E-04   0.100000E-02   -0.44974E-06 ------- FINAL F
+    8   14   10   0.152864E-04   0.100000E-02   -0.44973E-06 ------- FINAL F
+    9   15   15   0.399107E-04   0.300000E-02   -0.44968E-06 ------- FINAL F
+   10   16    8   0.837808E-04   0.250000E-03    0.32551E-05 ------- FINAL F
+   11   18   17   0.590497E-04   0.100000E-02   -0.32208E-05 ------- FINAL F
+   12   19   18   0.354500E-04   0.250000E-03   -0.24420E-05 ------- FINAL F
+   13   24   23   0.484018E-04   0.125000E-03    0.13712E-05 ------- FINAL F
+   14   26   16   0.570151E-04   0.312500E-04   -0.50762E-05 ------- FINAL F
+   15   27   26   0.710862E-04   0.300000E-02    0.69758E-05 ------- FINAL F
+   16   28   27   0.402994E-04   0.900000E-02    0.32107E-05 ------- FINAL F
+   17   36   35   0.347725E-04   0.500000E-03   -0.27905E-05 ------- FINAL F
+   18   44   43   0.991330E-04   0.250000E-03   -0.47408E-05 ------- FINAL F
+   19   45   44   0.741887E-04   0.100000E-02   -0.42251E-05 ------- FINAL F
+   20   46   25   0.585074E-04   0.100000E-02   -0.91014E-05 ------- FINAL F
+2ND PARTIALS     1      74 F EVAL
+2ND PARTIALS     2      93 F EVAL
+2ND PARTIALS     5     111 F EVAL
+2ND PARTIALS     6     128 F EVAL
+2ND PARTIALS     7     144 F EVAL
+2ND PARTIALS     9     159 F EVAL
+2ND PARTIALS    13     173 F EVAL
+2ND PARTIALS    14     186 F EVAL
+2ND PARTIALS    15     198 F EVAL
+2ND PARTIALS    16     209 F EVAL
+2ND PARTIALS    18     219 F EVAL
+2ND PARTIALS    19     228 F EVAL
+2ND PARTIALS    24     236 F EVAL
+2ND PARTIALS    26     243 F EVAL
+2ND PARTIALS    27     249 F EVAL
+2ND PARTIALS    28     254 F EVAL
+2ND PARTIALS    36     258 F EVAL
+2ND PARTIALS    44     261 F EVAL
+2ND PARTIALS    45     263 F EVAL
+2ND PARTIALS    46     264 F EVAL
+
+ALPHA HESSIAN MATRIX WRITTEN ON UNIT 58
+COV matrix is positive definite. Inversion successful.
+
+ALPHA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.586276E-01    1   0.609291E-01    2   0.722734E-05    3
+   0.343185E-01    4   0.240543E-03    5   0.183022E-01    6
+   0.175307E-04    7   0.189616E-01    8   0.387906E-01    9
+   0.294805E-03   10   0.104779E-02   11   0.179775       12
+   0.160404E-01   13   0.243502E-01   14   0.232845E-02   15
+   0.612903E-02   16   0.293051       17   0.923116E-01   18
+   0.867417E-01   19   0.392412E-01   20
+
+BETA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.586276E-01    1   0.609291E-01    2   0.722734E-05    3
+   0.343185E-01    4   0.956767E-03    5   0.183022E-01    6
+   0.175307E-04    7   0.189616E-01    8   0.387906E-01    9
+   0.103230E-01   10   0.104779E-02   11   0.179775       12
+   0.160404E-01   13   0.718395       14   0.232845E-02   15
+   0.612903E-02   16   0.293051       17   0.923116E-01   18
+   0.867417E-01   19    2.14047       20
+
+COVARIANCE MATRIX FINISHED
+                  58 ROWS AND COLUMNS 
+                 264 OBJECTIVE FUNCTION EVALUATIONS
+     3082.033369     OBJECTIVE FUNCTION VALUE
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+PRINTCOV DIAG;                                                                
+                                   THE STRUCTURAL MODEL
+                                   ********************
+
+
+             VALUE           NAME     LAG       NUM   T STAT      SE      NUM
+
+UN       EQUATION    1
+          0.0023751215    1  CNST               1    2.48    0.000957   1
+          0.0000104142    2  T                  2    1.44    0.000007   2
+          1.6868741304    3  UN       (-1)      3   28.77    0.058628   3
+         -0.8643902060    4  UN       (-2)      4  -14.19    0.060929   4
+          0.0458964988    5  UN       (-3)      5    0.00    0.000000   5
+          0.0773773153    6  UN       (-4)      6    0.00    0.000000   6
+          0.0326669665    7  P                  7    0.95    0.034318   7
+         -0.0326669665    8  P       RE 0    CCCCC
+
+NF       EQUATION    2
+         -0.0128919654    1  CNST               8   -1.25    0.010323   8
+          0.0000499679    2  T                  9    2.85    0.000018   9
+         -0.0626710952    3  UN                10   -3.31    0.018962  10
+          0.9252080868    4  NF       (-1)     11   50.55    0.018302  11
+         -0.0054711628    5  NF       (-2)     12    0.00    0.000000  12
+          0.0406145591    6  NF       (-3)     13    0.00    0.000000  13
+          0.0119175160    7  NF       (-4)     14    0.00    0.000000  14
+          0.1086557792    8  P                 15    2.80    0.038791  15
+         -0.1086557792    9  P       RE 0    CCCCC
+
+Y        EQUATION    3
+          3.5746665930    1  CNST              16    4.98    0.718395  16
+          0.0026148525    2  T                 17    2.50    0.001048  17
+          1.5529259585    3  N                 18    8.64    0.179775  18
+         -0.2209443589    4  N        (-1)     19    0.00    0.000000  19
+         -0.1657947625    5  N        (-2)     20    0.00    0.000000  20
+         -0.2151769576    6  N        (-3)     21    0.00    0.000000  21
+         -0.0374373854    7  N        (-4)     22    0.00    0.000000  22
+          0.9159394473    8  RHO      (-1)     23   57.10    0.016040  23
+          0.0439540581    9  RHO      (-2)     24    0.00    0.000000  24
+
+MMP      EQUATION    4
+          0.1939332249    1  CNST              25    0.09    2.140467  25
+         -0.0017750930    2  T                 26   -0.76    0.002328  26
+         -0.0045927063    3  R                 27   -0.75    0.006129  27
+         -0.0120579839    4  R        (-1)     28    0.00    0.000000  28
+          0.0012224850    5  R        (-2)     29    0.00    0.000000  29
+         -0.0089584695    6  R        (-3)     30    0.00    0.000000  30
+          0.0041751632    7  R        (-4)     31    0.00    0.000000  31
+          0.0002147216    8  R        (-5)     32    0.00    0.000000  32
+         -0.0109109798    9  R        (-6)     33    0.00    0.000000  33
+          0.0030484858   10  R        (-7)     34    0.00    0.000000  34
+          0.8861046608   11  Y                 35    3.02    0.293051  35
+         -0.3145122762   12  Y        (-1)     36    0.00    0.000000  36
+          0.2426892544   13  Y        (-2)     37    0.00    0.000000  37
+         -0.1536196045   14  Y        (-3)     38    0.00    0.000000  38
+          0.0296615934   15  Y        (-4)     39    0.00    0.000000  39
+         -0.1435094970   16  Y        (-5)     40    0.00    0.000000  40
+          0.2155686777   17  Y        (-6)     41    0.00    0.000000  41
+          0.0588927501   18  Y        (-7)     42    0.00    0.000000  42
+          0.7778339475   19  RHO      (-1)     43    8.43    0.092312  43
+          0.1699578203   20  RHO      (-2)     44    1.96    0.086742  44
+
+R        EQUATION    5
+          0.1690754751    1  CNST              45    0.00    0.000000  45
+          0.0038966094    2  T                 46    0.00    0.000000  46
+          1.2275272250    3  R        (-1)     47    0.00    0.000000  47
+         -0.2960571963    4  R        (-2)     48    0.00    0.000000  48
+          0.2503270384    5  R        (-3)     49    0.00    0.000000  49
+         -0.2439383211    6  R        (-4)     50    0.00    0.000000  50
+
+M        EQUATION    6
+          0.1202947830    1  CNST              51    0.00    0.000000  51
+          0.0004940741    2  T                 52    0.00    0.000000  52
+          0.7557851193    3  M        (-1)     53    0.00    0.000000  53
+          0.2185472823    4  M        (-2)     54    0.00    0.000000  54
+
+POP      EQUATION    7
+          0.0153279495    1  CNST              55    0.00    0.000000  55
+          0.0000119447    2  T                 56    0.00    2.202575  56
+          1.7746663094    3  POP      (-1)     57    0.78    2.262100  57
+         -0.7777799070    4  POP      (-2)     58    0.00    0.000000  58
+@                                                                             
+@ Check out the CHEAP option                                                  
+@                                                                             
+FIML FILEFIXED=KEYBOARD MAXITERS=20                                           
+ RECHEAP REMAXITERS=5 FILEDERWRITE=SARDER.BIN REDER=1 ;                       
+Number of nonzero Jacobian elements =       13
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS        13
+
+NUMBER OF JACOBIAN EQUATIONS                6
+
+
+IA VECTOR
+
+   1   3   6   8  10  11  14
+
+
+JA VECTOR
+
+   1   4   1   2   4   3   6   3   4   5   1   2   6
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  140
+FIML test function evaluation. F =      3082.033369    
+Computing derivatives: model solved for the sample period. Coeff no. =     1
+Computing derivatives: model solved for the sample period. Coeff no. =     2
+Computing derivatives: model solved for the sample period. Coeff no. =     3
+Computing derivatives: model solved for the sample period. Coeff no. =     4
+Computing derivatives: model solved for the sample period. Coeff no. =     5
+Computing derivatives: model solved for the sample period. Coeff no. =     6
+Computing derivatives: model solved for the sample period. Coeff no. =     7
+Computing derivatives: model solved for the sample period. Coeff no. =     8
+Computing derivatives: model solved for the sample period. Coeff no. =     9
+Computing derivatives: model solved for the sample period. Coeff no. =    10
+Computing derivatives: model solved for the sample period. Coeff no. =    11
+Computing derivatives: model solved for the sample period. Coeff no. =    12
+Computing derivatives: model solved for the sample period. Coeff no. =    13
+Computing derivatives: model solved for the sample period. Coeff no. =    14
+Computing derivatives: model solved for the sample period. Coeff no. =    15
+Computing derivatives: model solved for the sample period. Coeff no. =    16
+Computing derivatives: model solved for the sample period. Coeff no. =    17
+Computing derivatives: model solved for the sample period. Coeff no. =    18
+Computing derivatives: model solved for the sample period. Coeff no. =    19
+Computing derivatives: model solved for the sample period. Coeff no. =    20
+Derivatives for expectations written to specified data set. ITER =    1
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.686874130   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864390206   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010414   2 T                  5 **    1   7    0.8050E+02   9
+       0.032666966   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375121   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032666966   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925208087   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049968   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062671095   3 UN                14 **    1  16    0.5931E-01   1
+       0.108655779   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012891965   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108655779   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002614853   2 T                 18 **    1  26    0.8050E+02   2
+       1.552925958   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915939447   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.574666593   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001775093   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004592706   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886104661  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777833947  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169957820  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.193933225   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+
+                1    objective function evaluations
+     3082.033369     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.68689   0.000   1  -0.86442   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.000   5   0.03271   0.001   6
+   0.00238   0.001   7  -0.03271   0.001   8   0.92521   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06267   0.000  14   0.10877   0.001  15
+  -0.01289   0.000  16  -0.10877   0.001  17   0.00261   0.000  18
+   1.55223   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91599   0.000  24
+   0.04395   0.000  25   3.57784   0.001  26  -0.00177  -0.001  27
+  -0.00459  -0.001  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88651   0.000  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77787   0.000  44   0.16995   0.000  45
+   0.19053  -0.018  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              107    objective function evaluations
+     3082.033459     objective function value
+    0.9038647249E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.686892657   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864422441   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010410   2 T                  5 **    1   7    0.8050E+02   9
+       0.032707551   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002376317   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032707551   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925207884   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049969   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062669298   3 UN                14 **    1  16    0.5931E-01   1
+       0.108766947   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012892864   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108766947   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002614360   2 T                 18 **    1  26    0.8050E+02   2
+       1.552233463   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915989503   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.577838282   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001773407   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004587041   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886507040  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777872670  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169954403  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.190525046   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+FIML test function evaluation. F =      3082.033299    
+Computing derivatives: model solved for the sample period. Coeff no. =     1
+Computing derivatives: model solved for the sample period. Coeff no. =     2
+Computing derivatives: model solved for the sample period. Coeff no. =     3
+Computing derivatives: model solved for the sample period. Coeff no. =     4
+Computing derivatives: model solved for the sample period. Coeff no. =     5
+Computing derivatives: model solved for the sample period. Coeff no. =     6
+Computing derivatives: model solved for the sample period. Coeff no. =     7
+Computing derivatives: model solved for the sample period. Coeff no. =     8
+Computing derivatives: model solved for the sample period. Coeff no. =     9
+Computing derivatives: model solved for the sample period. Coeff no. =    10
+Computing derivatives: model solved for the sample period. Coeff no. =    11
+Computing derivatives: model solved for the sample period. Coeff no. =    12
+Computing derivatives: model solved for the sample period. Coeff no. =    13
+Computing derivatives: model solved for the sample period. Coeff no. =    14
+Computing derivatives: model solved for the sample period. Coeff no. =    15
+Computing derivatives: model solved for the sample period. Coeff no. =    16
+Computing derivatives: model solved for the sample period. Coeff no. =    17
+Computing derivatives: model solved for the sample period. Coeff no. =    18
+Computing derivatives: model solved for the sample period. Coeff no. =    19
+Computing derivatives: model solved for the sample period. Coeff no. =    20
+Derivatives for expectations written to specified data set. ITER =    2
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.686892657   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864422441   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010410   2 T                  5 **    1   7    0.8050E+02   9
+       0.032707551   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002376317   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032707551   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925207884   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049969   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062669298   3 UN                14 **    1  16    0.5931E-01   1
+       0.108766947   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012892864   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108766947   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002614360   2 T                 18 **    1  26    0.8050E+02   2
+       1.552233463   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915989503   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.577838282   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001773407   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004587041   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886507040  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777872670  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169954403  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.190525046   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+
+                1    objective function evaluations
+     3082.033299     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.68703   0.000   1  -0.86449   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.002   5   0.03272   0.000   6
+   0.00237  -0.002   7  -0.03272   0.000   8   0.92526   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06265   0.000  14   0.10876   0.000  15
+  -0.01287  -0.002  16  -0.10876   0.000  17   0.00262   0.002  18
+   1.55041  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91604   0.000  24
+   0.04395   0.000  25   3.58544   0.002  26  -0.00178   0.001  27
+  -0.00459   0.000  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88656   0.000  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77791   0.000  44   0.16996   0.000  45
+   0.19028  -0.001  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              107    objective function evaluations
+     3082.033425     objective function value
+    0.1262472069E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    2
+   1.68706   0.000   1  -0.86454   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.001   5   0.03266  -0.002   6
+   0.00237   0.000   7  -0.03266  -0.002   8   0.92527   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06271   0.001  14   0.10880   0.000  15
+  -0.01286  -0.001  16  -0.10880   0.000  17   0.00263   0.003  18
+   1.54967   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91603   0.000  24
+   0.04395   0.000  25   3.58808   0.001  26  -0.00178   0.003  27
+  -0.00459   0.000  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88662   0.000  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77787   0.000  44   0.16996   0.000  45
+   0.19013  -0.001  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              221    objective function evaluations
+     3082.033533     objective function value
+    0.1084414776E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    3
+   1.68706   0.000   1  -0.86460   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.001   5   0.03268   0.001   6
+   0.00238   0.001   7  -0.03268   0.001   8   0.92522   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06273   0.000  14   0.10879   0.000  15
+  -0.01288   0.002  16  -0.10879   0.000  17   0.00264   0.003  18
+   1.54871  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91597   0.000  24
+   0.04395   0.000  25   3.59173   0.001  26  -0.00178   0.000  27
+  -0.00458   0.000  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88677   0.000  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77784   0.000  44   0.16997   0.000  45
+   0.18896  -0.006  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              340    objective function evaluations
+     3082.033587     objective function value
+    0.5336318236E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.687064902   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864603036   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010422   2 T                  5 **    1   7    0.8050E+02   9
+       0.032683275   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375133   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032683275   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925222956   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049975   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062733485   3 UN                14 **    1  16    0.5931E-01   1
+       0.108787488   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012882682   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108787488   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002635007   2 T                 18 **    1  26    0.8050E+02   2
+       1.548706588   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915965497   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.591725771   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001779457   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004584723   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886773245  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777838311  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169966230  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.188956748   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+FIML test function evaluation. F =      3082.033024    
+Computing derivatives: model solved for the sample period. Coeff no. =     1
+Computing derivatives: model solved for the sample period. Coeff no. =     2
+Computing derivatives: model solved for the sample period. Coeff no. =     3
+Computing derivatives: model solved for the sample period. Coeff no. =     4
+Computing derivatives: model solved for the sample period. Coeff no. =     5
+Computing derivatives: model solved for the sample period. Coeff no. =     6
+Computing derivatives: model solved for the sample period. Coeff no. =     7
+Computing derivatives: model solved for the sample period. Coeff no. =     8
+Computing derivatives: model solved for the sample period. Coeff no. =     9
+Computing derivatives: model solved for the sample period. Coeff no. =    10
+Computing derivatives: model solved for the sample period. Coeff no. =    11
+Computing derivatives: model solved for the sample period. Coeff no. =    12
+Computing derivatives: model solved for the sample period. Coeff no. =    13
+Computing derivatives: model solved for the sample period. Coeff no. =    14
+Computing derivatives: model solved for the sample period. Coeff no. =    15
+Computing derivatives: model solved for the sample period. Coeff no. =    16
+Computing derivatives: model solved for the sample period. Coeff no. =    17
+Computing derivatives: model solved for the sample period. Coeff no. =    18
+Computing derivatives: model solved for the sample period. Coeff no. =    19
+Computing derivatives: model solved for the sample period. Coeff no. =    20
+Derivatives for expectations written to specified data set. ITER =    3
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.687064902   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864603036   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010422   2 T                  5 **    1   7    0.8050E+02   9
+       0.032683275   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375133   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032683275   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925222956   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049975   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062733485   3 UN                14 **    1  16    0.5931E-01   1
+       0.108787488   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012882682   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108787488   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002635007   2 T                 18 **    1  26    0.8050E+02   2
+       1.548706588   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915965497   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.591725771   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001779457   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004584723   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.886773245  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777838311  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169966230  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.188956748   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+
+                1    objective function evaluations
+     3082.033024     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.68707   0.000   1  -0.86461   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.000   5   0.03268   0.000   6
+   0.00238   0.000   7  -0.03268   0.000   8   0.92522   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06276   0.000  14   0.10886   0.001  15
+  -0.01288   0.000  16  -0.10886   0.001  17   0.00263   0.000  18
+   1.54820   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91598   0.000  24
+   0.04395   0.000  25   3.59401   0.001  26  -0.00178   0.000  27
+  -0.00459   0.000  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88755   0.001  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77791   0.000  44   0.16997   0.000  45
+   0.18276  -0.033  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              108    objective function evaluations
+     3082.033100     objective function value
+    0.7622567136E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.687070897   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864606286   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010420   2 T                  5 **    1   7    0.8050E+02   9
+       0.032681501   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375549   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032681501   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925222956   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049983   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062764131   3 UN                14 **    1  16    0.5931E-01   1
+       0.108863244   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012881141   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108863244   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002634774   2 T                 18 **    1  26    0.8050E+02   2
+       1.548196201   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915981616   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.594007718   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001778660   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004585427   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.887546102  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777908503  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169968325  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.182757275   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+FIML test function evaluation. F =      3082.032882    
+Computing derivatives: model solved for the sample period. Coeff no. =     1
+Computing derivatives: model solved for the sample period. Coeff no. =     2
+Computing derivatives: model solved for the sample period. Coeff no. =     3
+Computing derivatives: model solved for the sample period. Coeff no. =     4
+Computing derivatives: model solved for the sample period. Coeff no. =     5
+Computing derivatives: model solved for the sample period. Coeff no. =     6
+Computing derivatives: model solved for the sample period. Coeff no. =     7
+Computing derivatives: model solved for the sample period. Coeff no. =     8
+Computing derivatives: model solved for the sample period. Coeff no. =     9
+Computing derivatives: model solved for the sample period. Coeff no. =    10
+Computing derivatives: model solved for the sample period. Coeff no. =    11
+Computing derivatives: model solved for the sample period. Coeff no. =    12
+Computing derivatives: model solved for the sample period. Coeff no. =    13
+Computing derivatives: model solved for the sample period. Coeff no. =    14
+Computing derivatives: model solved for the sample period. Coeff no. =    15
+Computing derivatives: model solved for the sample period. Coeff no. =    16
+Computing derivatives: model solved for the sample period. Coeff no. =    17
+Computing derivatives: model solved for the sample period. Coeff no. =    18
+Computing derivatives: model solved for the sample period. Coeff no. =    19
+Computing derivatives: model solved for the sample period. Coeff no. =    20
+Derivatives for expectations written to specified data set. ITER =    4
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.687070897   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864606286   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010420   2 T                  5 **    1   7    0.8050E+02   9
+       0.032681501   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375549   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032681501   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925222956   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049983   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062764131   3 UN                14 **    1  16    0.5931E-01   1
+       0.108863244   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012881141   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108863244   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002634774   2 T                 18 **    1  26    0.8050E+02   2
+       1.548196201   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915981616   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.594007718   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001778660   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004585427   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.887546102  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777908503  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169968325  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.182757275   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+
+                1    objective function evaluations
+     3082.032882     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.68710   0.000   1  -0.86459   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.000   5   0.03267   0.000   6
+   0.00237  -0.001   7  -0.03267   0.000   8   0.92522   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06276   0.000  14   0.10887   0.000  15
+  -0.01288   0.000  16  -0.10887   0.000  17   0.00264   0.003  18
+   1.54679  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91593   0.000  24
+   0.04395   0.000  25   3.59963   0.002  26  -0.00178   0.003  27
+  -0.00458  -0.002  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88761   0.000  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77786   0.000  44   0.16997   0.000  45
+   0.18258  -0.001  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              109    objective function evaluations
+     3082.032971     objective function value
+    0.8895881774E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.687103234   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864593781   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010418   2 T                  5 **    1   7    0.8050E+02   9
+       0.032665296   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002373279   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032665296   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925222956   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049982   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062757383   3 UN                14 **    1  16    0.5931E-01   1
+       0.108867088   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012881401   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108867088   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002642093   2 T                 18 **    1  26    0.8050E+02   2
+       1.546791266   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915931556   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.599627880   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001783111   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004577964   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.887608963  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777864378  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169971236  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.182579043   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+FIML test function evaluation. F =      3082.032628    
+Computing derivatives: model solved for the sample period. Coeff no. =     1
+Computing derivatives: model solved for the sample period. Coeff no. =     2
+Computing derivatives: model solved for the sample period. Coeff no. =     3
+Computing derivatives: model solved for the sample period. Coeff no. =     4
+Computing derivatives: model solved for the sample period. Coeff no. =     5
+Computing derivatives: model solved for the sample period. Coeff no. =     6
+Computing derivatives: model solved for the sample period. Coeff no. =     7
+Computing derivatives: model solved for the sample period. Coeff no. =     8
+Computing derivatives: model solved for the sample period. Coeff no. =     9
+Computing derivatives: model solved for the sample period. Coeff no. =    10
+Computing derivatives: model solved for the sample period. Coeff no. =    11
+Computing derivatives: model solved for the sample period. Coeff no. =    12
+Computing derivatives: model solved for the sample period. Coeff no. =    13
+Computing derivatives: model solved for the sample period. Coeff no. =    14
+Computing derivatives: model solved for the sample period. Coeff no. =    15
+Computing derivatives: model solved for the sample period. Coeff no. =    16
+Computing derivatives: model solved for the sample period. Coeff no. =    17
+Computing derivatives: model solved for the sample period. Coeff no. =    18
+Computing derivatives: model solved for the sample period. Coeff no. =    19
+Computing derivatives: model solved for the sample period. Coeff no. =    20
+Derivatives for expectations written to specified data set. ITER =    5
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.687103234   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.864593781   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010418   2 T                  5 **    1   7    0.8050E+02   9
+       0.032665296   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002373279   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.032665296   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925222956   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049982   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062757383   3 UN                14 **    1  16    0.5931E-01   1
+       0.108867088   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012881401   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.108867088   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002642093   2 T                 18 **    1  26    0.8050E+02   2
+       1.546791266   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915931556   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.599627880   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001783111   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004577964   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.887608963  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.777864378  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.169971236  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.182579043   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+
+                1    objective function evaluations
+     3082.032628     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.68707   0.000   1  -0.86450   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.001   5   0.03258  -0.002   6
+   0.00237  -0.001   7  -0.03258  -0.002   8   0.92523   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06276   0.000  14   0.10887   0.000  15
+  -0.01288   0.000  16  -0.10887   0.000  17   0.00264   0.001  18
+   1.54675   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91598   0.000  24
+   0.04395   0.000  25   3.59965   0.000  26  -0.00179   0.003  27
+  -0.00459   0.003  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.88886   0.001  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77801   0.000  44   0.16998   0.000  45
+   0.17329  -0.051  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              107    objective function evaluations
+     3082.032741     objective function value
+    0.1124142709E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    2
+   1.68688   0.000   1  -0.86433   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.003   5   0.03270   0.003   6
+   0.00237   0.002   7  -0.03270   0.003   8   0.92521   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06280   0.001  14   0.10915   0.003  15
+  -0.01289   0.001  16  -0.10915   0.003  17   0.00264   0.000  18
+   1.54692   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91598   0.000  24
+   0.04395   0.000  25   3.59884   0.000  26  -0.00180   0.005  27
+  -0.00457  -0.006  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.89027   0.002  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77797   0.000  44   0.16996   0.000  45
+   0.16275  -0.061  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              220    objective function evaluations
+     3082.032844     objective function value
+    0.1032321807E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    3
+   1.68674   0.000   1  -0.86415   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.001   5   0.03276   0.002   6
+   0.00237  -0.001   7  -0.03276   0.002   8   0.92521   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06284   0.001  14   0.10937   0.002  15
+  -0.01288   0.000  16  -0.10937   0.002  17   0.00264   0.000  18
+   1.54697   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91597   0.000  24
+   0.04395   0.000  25   3.59859   0.000  26  -0.00182   0.013  27
+  -0.00457   0.000  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.89287   0.003  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77802   0.000  44   0.16989   0.000  45
+   0.14431  -0.113  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              340    objective function evaluations
+     3082.033020     objective function value
+    0.1762293737E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    4
+   1.68649   0.000   1  -0.86393   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.002   5   0.03305   0.009   6
+   0.00237   0.000   7  -0.03305   0.009   8   0.92528   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06284   0.000  14   0.10945   0.001  15
+  -0.01284  -0.003  16  -0.10945   0.001  17   0.00264   0.000  18
+   1.54671   0.000  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91590   0.000  24
+   0.04395   0.000  25   3.59978   0.000  26  -0.00184   0.009  27
+  -0.00453  -0.008  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.89480   0.002  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77808   0.000  44   0.16975  -0.001  45
+   0.13032  -0.097  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              465    objective function evaluations
+     3082.033140     objective function value
+    0.1199979065E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    5
+   1.68630   0.000   1  -0.86379   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.003   5   0.03306   0.000   6
+   0.00237   0.000   7  -0.03306   0.000   8   0.92535   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.001  13  -0.06284   0.000  14   0.10964   0.002  15
+  -0.01281  -0.003  16  -0.10964   0.002  17   0.00265   0.001  18
+   1.54578  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91596   0.000  24
+   0.04395   0.000  25   3.60374   0.001  26  -0.00185   0.007  27
+  -0.00454   0.003  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.89642   0.002  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77830   0.000  44   0.16956  -0.001  45
+   0.11898  -0.087  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              590    objective function evaluations
+     3082.033253     objective function value
+    0.1129064872E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    6
+   1.68619   0.000   1  -0.86369   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001   0.001   5   0.03305   0.000   6
+   0.00237   0.000   7  -0.03305   0.000   8   0.92540   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005   0.000  13  -0.06289   0.001  14   0.10962   0.000  15
+  -0.01278  -0.002  16  -0.10962   0.000  17   0.00266   0.003  18
+   1.54469  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91595   0.000  24
+   0.04395   0.000  25   3.60782   0.001  26  -0.00186   0.007  27
+  -0.00453  -0.003  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.89732   0.001  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77835   0.000  44   0.16939  -0.001  45
+   0.11291  -0.051  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              715    objective function evaluations
+     3082.033375     objective function value
+    0.1221104876E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    7
+   1.68597   0.000   1  -0.86352   0.000   2   0.04590   0.000   3
+   0.07738   0.000   4   0.00001  -0.001   5   0.03318   0.004   6
+   0.00238   0.001   7  -0.03318   0.004   8   0.92541   0.000   9
+  -0.00547   0.000  10   0.04061   0.000  11   0.01192   0.000  12
+   0.00005  -0.001  13  -0.06294   0.001  14   0.10978   0.002  15
+  -0.01277  -0.001  16  -0.10978   0.002  17   0.00266   0.002  18
+   1.54339  -0.001  19  -0.22094   0.000  20  -0.16579   0.000  21
+  -0.21518   0.000  22  -0.03744   0.000  23   0.91589   0.000  24
+   0.04395   0.000  25   3.61296   0.001  26  -0.00187   0.005  27
+  -0.00451  -0.004  28  -0.01206   0.000  29   0.00122   0.000  30
+  -0.00896   0.000  31   0.00418   0.000  32   0.00021   0.000  33
+  -0.01091   0.000  34   0.00305   0.000  35   0.89864   0.001  36
+  -0.31451   0.000  37   0.24269   0.000  38  -0.15362   0.000  39
+   0.02966   0.000  40  -0.14351   0.000  41   0.21557   0.000  42
+   0.05889   0.000  43   0.77865   0.000  44   0.16898  -0.002  45
+   0.10341  -0.084  46   1.22753   0.000  47  -0.29606   0.000  48
+   0.25033   0.000  49  -0.24394   0.000  50   0.00390   0.000  51
+   0.16908   0.000  52   0.75579   0.000  53   0.21855   0.000  54
+   0.00049   0.000  55   0.12029   0.000  56   1.77467   0.000  57
+  -0.77778   0.000  58   0.00001   0.000  59   0.01533   0.000  60
+
+              840    objective function evaluations
+     3082.033459     objective function value
+    0.8365624717E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.685974234   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.863522845   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010424   2 T                  5 **    1   7    0.8050E+02   9
+       0.033175384   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375266   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.033175384   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925412816   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049857   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062936275   3 UN                14 **    1  16    0.5931E-01   1
+       0.109782498   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012768877   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.109782498   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002661778   2 T                 18 **    1  26    0.8050E+02   2
+       1.543387567   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915894908   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.612964915   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001872342   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004511863   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.898639013  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.778653159  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.168977421  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.103414726   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+Iteration limit reached for RECHEAP. Execution continuing.
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Check the final value of the likelihood function obtained                   
+@ using the less expensive method.                                            
+@                                                                             
+FIML MAXITERS=0 ;                                                             
+Number of nonzero Jacobian elements =       13
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS        13
+
+NUMBER OF JACOBIAN EQUATIONS                6
+
+
+IA VECTOR
+
+   1   3   6   8  10  11  14
+
+
+JA VECTOR
+
+   1   4   1   2   4   3   6   3   4   5   1   2   6
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  140
+FIML test function evaluation. F =      3082.031848    
+Beginning of Parke algorithm
+        60 coefficients in the model
+        58 coefficients are in the kernel
+         0 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.685974234   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.863522845   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3 **    1   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4 **    1   7    0.5903E-01   1
+       0.000010424   2 T                  5 **    1   7    0.8050E+02   9
+       0.033175384   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375266   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.033175384   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925412816   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10 **    1  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11 **    1  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12 **    1  16   -0.4910E+00   2
+       0.000049857   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062936275   3 UN                14 **    1  16    0.5931E-01   1
+       0.109782498   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012768877   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.109782498   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002661778   2 T                 18 **    1  26    0.8050E+02   2
+       1.543387567   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20 **    1  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21 **    1  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22 **    1  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23 **    1  26    0.4397E+01   6
+       0.915894908   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25 **    3  26    0.0000E+00   6
+       3.612964915   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001872342   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004511863   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29 **    1  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30 **    1  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31 **    1  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32 **    1  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33 **    1  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34 **    1  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35 **    1  46    0.7130E+01   5
+       0.898639013  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37 **    1  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38 **    1  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39 **    1  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40 **    1  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41 **    1  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42 **    1  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43 **    1  46    0.7757E+01   3
+       0.778653159  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.168977421  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.103414726   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47 **    1  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48 **    1  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49 **    1  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50 **    1  52    0.7274E+01   5
+       0.003896609   2 T                 51 **    1  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52 **    2  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53 **    1  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54 **    1  56    0.5605E+01   7
+       0.000494074   2 T                 55 **    1  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56 **    2  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57 **    1  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58 **    1  60    0.4955E+01   8
+       0.000011945   2 T                 59 **    1  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60 **    2  60    0.1000E+01  10
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.685974234   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.863522845   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3 **    1   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4 **    1   7    0.5903E-01   1
+       0.000010424   2 T                  5 **    1   7    0.8050E+02   9
+       0.033175384   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375266   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.033175384   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925412816   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10 **    1  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11 **    1  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12 **    1  16   -0.4910E+00   2
+       0.000049857   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062936275   3 UN                14 **    1  16    0.5931E-01   1
+       0.109782498   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012768877   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.109782498   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002661778   2 T                 18 **    1  26    0.8050E+02   2
+       1.543387567   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20 **    1  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21 **    1  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22 **    1  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23 **    1  26    0.4397E+01   6
+       0.915894908   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25 **    3  26    0.0000E+00   6
+       3.612964915   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001872342   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004511863   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29 **    1  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30 **    1  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31 **    1  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32 **    1  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33 **    1  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34 **    1  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35 **    1  46    0.7130E+01   5
+       0.898639013  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37 **    1  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38 **    1  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39 **    1  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40 **    1  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41 **    1  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42 **    1  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43 **    1  46    0.7757E+01   3
+       0.778653159  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.168977421  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.103414726   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47 **    1  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48 **    1  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49 **    1  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50 **    1  52    0.7274E+01   5
+       0.003896609   2 T                 51 **    1  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52 **    2  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53 **    1  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54 **    1  56    0.5605E+01   7
+       0.000494074   2 T                 55 **    1  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56 **    2  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57 **    1  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58 **    1  60    0.4955E+01   8
+       0.000011945   2 T                 59 **    1  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60 **    2  60    0.1000E+01  10
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Estimate the COV matrix using the CHEAP option: (this did                   
+@  give the correct t-statistics, so in this case the                         
+@  CHEAP option did not work)                                                 
+@                                                                             
+FIML FILEFIXED=KEYBOARD MAXITERS=0 COV                                        
+ RECHEAP REMAXITERS=0 REDER=0 FILEDERREAD=SARDER.BIN ;                        
+Number of nonzero Jacobian elements =       13
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS        13
+
+NUMBER OF JACOBIAN EQUATIONS                6
+
+
+IA VECTOR
+
+   1   3   6   8  10  11  14
+
+
+JA VECTOR
+
+   1   4   1   2   4   3   6   3   4   5   1   2   6
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  140
+FIML test function evaluation. F =      3082.031848    
+Derivatives read from specified data set.
+Beginning of Parke algorithm
+        60 coefficients in the model
+        20 coefficients are in the kernel
+        38 coefficients are not in the kernel
+         2 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+UN       Equation    1
+       1.685974234   3 UN       (-1)      1 **    1   7    0.5934E-01   1
+      -0.863522845   4 UN       (-2)      2 **    1   7    0.5935E-01   1
+       0.045896499   5 UN       (-3)      3       5   7    0.5923E-01   1
+       0.077377315   6 UN       (-4)      4       5   7    0.5903E-01   1
+       0.000010424   2 T                  5 **    1   7    0.8050E+02   9
+       0.033175384   7 P                  6 **    1   7   -0.6507E+00   4
+       0.002375266   1 CONSTANT           7 **    2   7    0.1000E+01  10
+      -0.033175384   8 P       RE 0       8 CC    4   7   -0.6507E+00   4
+
+NF       Equation    2
+       0.925412816   4 NF       (-1)      9 **    1  16   -0.4885E+00   2
+      -0.005471163   5 NF       (-2)     10       5  16   -0.4893E+00   2
+       0.040614559   6 NF       (-3)     11       5  16   -0.4901E+00   2
+       0.011917516   7 NF       (-4)     12       5  16   -0.4910E+00   2
+       0.000049857   2 T                 13 **    1  16    0.8050E+02   9
+      -0.062936275   3 UN                14 **    1  16    0.5931E-01   1
+       0.109782498   8 P                 15 **    1  16   -0.6507E+00   4
+      -0.012768877   1 CONSTANT          16 **    2  16    0.1000E+01  10
+      -0.109782498   9 P       RE 0      17 CC    4  16   -0.6507E+00   4
+
+Y        Equation    3
+       0.002661778   2 T                 18 **    1  26    0.8050E+02   2
+       1.543387567   3 N                 19 **    1  26    0.4416E+01  10
+      -0.220944359   4 N        (-1)     20       5  26    0.4411E+01   9
+      -0.165794762   5 N        (-2)     21       5  26    0.4406E+01   6
+      -0.215176958   6 N        (-3)     22       5  26    0.4402E+01   6
+      -0.037437385   7 N        (-4)     23       5  26    0.4397E+01   6
+       0.915894908   8 RHO-1             24 **    3  26    0.0000E+00   6
+       0.043954058   9 RHO-2             25       5  26    0.0000E+00   6
+       3.612964915   1 CONSTANT          26 **    2  26    0.1000E+01   0
+
+MMP      Equation    4
+      -0.001872342   2 T                 27 **    1  46    0.8050E+02   2
+      -0.004511863   3 R                 28 **    1  46    0.7463E+01  10
+      -0.012057984   4 R        (-1)     29       5  46    0.7416E+01   9
+       0.001222485   5 R        (-2)     30       5  46    0.7368E+01   5
+      -0.008958470   6 R        (-3)     31       5  46    0.7322E+01   5
+       0.004175163   7 R        (-4)     32       5  46    0.7274E+01   5
+       0.000214722   8 R        (-5)     33       5  46    0.7228E+01   5
+      -0.010910980   9 R        (-6)     34       5  46    0.7182E+01   5
+       0.003048486  10 R        (-7)     35       5  46    0.7130E+01   5
+       0.898639013  11 Y                 36 **    1  46    0.7809E+01   5
+      -0.314512276  12 Y        (-1)     37       5  46    0.7801E+01   5
+       0.242689254  13 Y        (-2)     38       5  46    0.7794E+01   3
+      -0.153619605  14 Y        (-3)     39       5  46    0.7786E+01   3
+       0.029661593  15 Y        (-4)     40       5  46    0.7779E+01   3
+      -0.143509497  16 Y        (-5)     41       5  46    0.7772E+01   3
+       0.215568678  17 Y        (-6)     42       5  46    0.7764E+01   3
+       0.058892750  18 Y        (-7)     43       5  46    0.7757E+01   3
+       0.778653159  19 RHO-1             44 **    3  46    0.0000E+00   3
+       0.168977421  20 RHO-2             45 **    3  46    0.0000E+00   3
+       0.103414726   1 CONSTANT          46 **    2  46    0.1000E+01   0
+
+R        Equation    5
+       1.227527225   3 R        (-1)     47       5  52    0.7416E+01   5
+      -0.296057196   4 R        (-2)     48       5  52    0.7368E+01   5
+       0.250327038   5 R        (-3)     49       5  52    0.7322E+01   5
+      -0.243938321   6 R        (-4)     50       5  52    0.7274E+01   5
+       0.003896609   2 T                 51       5  52    0.8050E+02   9
+       0.169075475   1 CONSTANT          52       5  52    0.1000E+01  10
+
+M        Equation    6
+       0.755785119   3 M        (-1)     53       5  56    0.5618E+01   7
+       0.218547282   4 M        (-2)     54       5  56    0.5605E+01   7
+       0.000494074   2 T                 55       5  56    0.8050E+02   9
+       0.120294783   1 CONSTANT          56       5  56    0.1000E+01  10
+
+POP      Equation    7
+       1.774666309   3 POP      (-1)     57       5  60    0.4959E+01   8
+      -0.777779907   4 POP      (-2)     58       5  60    0.4955E+01   8
+       0.000011945   2 T                 59       5  60    0.8050E+02   9
+       0.015327950   1 CONSTANT          60       5  60    0.1000E+01  10
+    0.1000000000E-04    0.1000000000E-03
+FIML covariance matrix routine
+    0.1000000000E-04    0.1000000000E-03
+     3082.031748     FLOW     3082.031838     FHIGH     3082.031848     FTOP
+
+  COV#  B#  IPP#    F DIFF         COEF PCT         UMEAN
+ 
+    1    1    3   0.619441E-04   0.625000E-04    0.80372E-06 ------- FINAL F
+    2    2    4   0.267676E-04   0.156250E-04    0.15066E-06 ------- FINAL F
+    3    5    2   0.193412E-04   0.300000E-02    0.80372E-06 ------- FINAL F
+    4    6    7   0.461003E-04   0.390625E-05    0.13086E-05 ------- FINAL F
+    5    7    1   0.227765E-04   0.100000E-02   -0.15715E-05 ------- FINAL F
+    6    9   11   0.613776E-04   0.187500E-03    0.30866E-05 ------- FINAL F
+    7   13    9   0.230198E-04   0.100000E-02    0.59333E-06 ------- FINAL F
+    8   14   10   0.279727E-04   0.600000E-02    0.84438E-06 ------- FINAL F
+    9   15   15   0.141994E-04   0.100000E-02    0.63094E-06 ------- FINAL F
+   10   16    8   0.963052E-04   0.250000E-03    0.37934E-05 ------- FINAL F
+   11   18   17   0.223174E-04   0.125000E-03   -0.16612E-05 ------- FINAL F
+   12   19   18   0.487016E-04   0.195312E-05   -0.13415E-05 ------- FINAL F
+   13   24   23   0.281907E-04   0.578320E-02    0.89436E-04 ------- FINAL F
+   14   26   16   0.297202E-04   0.390625E-05   -0.18939E-05 ------- FINAL F
+   15   27   26   0.606997E-04   0.600000E-02    0.87981E-05 ------- FINAL F
+   16   28   27   0.506793E-04   0.168407        0.36419E-04 ------- FINAL F
+   17   36   35   0.933174E-04   0.312500E-04   -0.39874E-05 ------- FINAL F
+   18   44   43   0.602482E-04   0.540234E-02   -0.12787E-03 ------- FINAL F
+   19   45   44   0.153168E-04   0.312500E-04   -0.39083E-05 ------- FINAL F
+   20   46   25   0.675100E-04   0.375000E-02   -0.24055E-04 ------- FINAL F
+2ND PARTIALS     1     146 F EVAL
+2ND PARTIALS     2     165 F EVAL
+2ND PARTIALS     5     183 F EVAL
+2ND PARTIALS     6     200 F EVAL
+2ND PARTIALS     7     216 F EVAL
+2ND PARTIALS     9     231 F EVAL
+2ND PARTIALS    13     245 F EVAL
+2ND PARTIALS    14     258 F EVAL
+2ND PARTIALS    15     270 F EVAL
+2ND PARTIALS    16     281 F EVAL
+2ND PARTIALS    18     291 F EVAL
+2ND PARTIALS    19     300 F EVAL
+2ND PARTIALS    24     308 F EVAL
+2ND PARTIALS    26     315 F EVAL
+2ND PARTIALS    27     321 F EVAL
+2ND PARTIALS    28     326 F EVAL
+2ND PARTIALS    36     330 F EVAL
+2ND PARTIALS    44     333 F EVAL
+2ND PARTIALS    45     335 F EVAL
+2ND PARTIALS    46     336 F EVAL
+
+ALPHA HESSIAN MATRIX WRITTEN ON UNIT 58
+COV matrix is positive definite. Inversion successful.
+
+ALPHA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.848755E-01    1   0.610129E-01    2   0.169304E-03    3
+  -0.181162E-04    4   0.199603E-01    5   0.191135E-01    6
+   0.559476E-03    7   0.146938        8  -0.375807E-03    9
+   0.659908E-01   10   0.521882E-03   11   0.349000E-01   12
+   0.146654E-01   13   0.214873E-01   14   0.787464E-03   15
+   0.497501E-02   16   0.127078       17   0.454122E-01   18
+   0.474915E-01   19   0.356529E-01   20
+
+BETA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.848755E-01    1   0.610129E-01    2   0.169304E-03    3
+  -0.181162E-04    4   0.676705E-02    5   0.191135E-01    6
+   0.559476E-03    7   0.146938        8  -0.375807E-03    9
+   0.238429E-01   10   0.521882E-03   11   0.349000E-01   12
+   0.146654E-01   13   0.131036       14   0.787464E-03   15
+   0.497501E-02   16   0.127078       17   0.454122E-01   18
+   0.474915E-01   19   0.943923       20
+
+COVARIANCE MATRIX FINISHED
+                  58 ROWS AND COLUMNS 
+                 336 OBJECTIVE FUNCTION EVALUATIONS
+     3082.031848     OBJECTIVE FUNCTION VALUE
+Convergence reached for RECHEAP after      1 iterations.
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+PRINTCOV DIAG;                                                                
+                                   THE STRUCTURAL MODEL
+                                   ********************
+
+
+             VALUE           NAME     LAG       NUM   T STAT      SE      NUM
+
+UN       EQUATION    1
+          0.0023752663    1  CNST               1    0.35    0.006767   1
+          0.0000104243    2  T                  2    0.06    0.000169   2
+          1.6859742339    3  UN       (-1)      3   19.86    0.084876   3
+         -0.8635228448    4  UN       (-2)      4  -14.15    0.061013   4
+          0.0458964988    5  UN       (-3)      5    0.00    0.000000   5
+          0.0773773153    6  UN       (-4)      6    0.00    0.000000   6
+          0.0331753835    7  P                  7    0.00    0.000000   7
+         -0.0331753835    8  P       RE 0    CCCCC
+
+NF       EQUATION    2
+         -0.0127688772    1  CNST               8   -0.54    0.023843   8
+          0.0000498567    2  T                  9    0.09    0.000559   9
+         -0.0629362755    3  UN                10   -0.43    0.146938  10
+          0.9254128155    4  NF       (-1)     11   48.42    0.019114  11
+         -0.0054711628    5  NF       (-2)     12    0.00    0.000000  12
+          0.0406145591    6  NF       (-3)     13    0.00    0.000000  13
+          0.0119175160    7  NF       (-4)     14    0.00    0.000000  14
+          0.1097824982    8  P                 15    0.00    0.000000  15
+         -0.1097824982    9  P       RE 0    CCCCC
+
+Y        EQUATION    3
+          3.6129649154    1  CNST              16   27.57    0.131036  16
+          0.0026617779    2  T                 17    5.10    0.000522  17
+          1.5433875668    3  N                 18   44.22    0.034900  18
+         -0.2209443589    4  N        (-1)     19    0.00    0.000000  19
+         -0.1657947625    5  N        (-2)     20    0.00    0.000000  20
+         -0.2151769576    6  N        (-3)     21    0.00    0.000000  21
+         -0.0374373854    7  N        (-4)     22    0.00    0.000000  22
+          0.9158949080    8  RHO      (-1)     23   62.45    0.014665  23
+          0.0439540581    9  RHO      (-2)     24    0.00    0.000000  24
+
+MMP      EQUATION    4
+          0.1034147264    1  CNST              25    0.11    0.943923  25
+         -0.0018723422    2  T                 26   -2.38    0.000787  26
+         -0.0045118630    3  R                 27   -0.91    0.004975  27
+         -0.0120579839    4  R        (-1)     28    0.00    0.000000  28
+          0.0012224850    5  R        (-2)     29    0.00    0.000000  29
+         -0.0089584695    6  R        (-3)     30    0.00    0.000000  30
+          0.0041751632    7  R        (-4)     31    0.00    0.000000  31
+          0.0002147216    8  R        (-5)     32    0.00    0.000000  32
+         -0.0109109798    9  R        (-6)     33    0.00    0.000000  33
+          0.0030484858   10  R        (-7)     34    0.00    0.000000  34
+          0.8986390128   11  Y                 35    7.07    0.127078  35
+         -0.3145122762   12  Y        (-1)     36    0.00    0.000000  36
+          0.2426892544   13  Y        (-2)     37    0.00    0.000000  37
+         -0.1536196045   14  Y        (-3)     38    0.00    0.000000  38
+          0.0296615934   15  Y        (-4)     39    0.00    0.000000  39
+         -0.1435094970   16  Y        (-5)     40    0.00    0.000000  40
+          0.2155686777   17  Y        (-6)     41    0.00    0.000000  41
+          0.0588927501   18  Y        (-7)     42    0.00    0.000000  42
+          0.7786531595   19  RHO      (-1)     43   17.15    0.045412  43
+          0.1689774211   20  RHO      (-2)     44    3.56    0.047492  44
+
+R        EQUATION    5
+          0.1690754751    1  CNST              45    0.00    0.000000  45
+          0.0038966094    2  T                 46    0.00    0.000000  46
+          1.2275272250    3  R        (-1)     47    0.00    0.000000  47
+         -0.2960571963    4  R        (-2)     48    0.00    0.000000  48
+          0.2503270384    5  R        (-3)     49    0.00    0.000000  49
+         -0.2439383211    6  R        (-4)     50    0.00    0.000000  50
+
+M        EQUATION    6
+          0.1202947830    1  CNST              51    0.00    0.000000  51
+          0.0004940741    2  T                 52    0.00    0.000000  52
+          0.7557851193    3  M        (-1)     53    0.00    0.000000  53
+          0.2185472823    4  M        (-2)     54    0.00    0.000000  54
+
+POP      EQUATION    7
+          0.0153279495    1  CNST              55    0.00    0.000000  55
+          0.0000119447    2  T                 56    0.00    2.202575  56
+          1.7746663094    3  POP      (-1)     57    0.78    2.262100  57
+         -0.7777799070    4  POP      (-2)     58    0.00    0.000000  58
+@                                                                             
+@ Exit the job.                                                               
+@                                                                             
+QUIT;                                                                         
+Normal End of Job.

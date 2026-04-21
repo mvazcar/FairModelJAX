@@ -1,0 +1,345 @@
+IS MODEL FOR FP PROGRAM  NOVEMBER 11, 2013
+SPACE MAXVAR=200 MAXS=2 MAXCOEF=20  MAXFSR=30 FIRSTPER=1952.1 
+ LASTPER=2013.3 MAXCOV=9;
+@
+@ For solution, do at least 2 iterations:
+@
+SETUPSOLVE MINITERS=2 ;
+@
+@ No missing values in IS MODEL:
+@
+SETUPSOLVE NOMISS;
+@
+@ For estimation divide by T rather than T-K:
+@
+SETUPEST DIVIDET;
+@
+@ Use (6.13) and (6.14), p. 212, in Fair (1984) to compute the 
+@ 2SLS estimates:
+@
+SETUPEST ALT2SLS;
+@
+@ Set up some options for the DFP algorithm:
+@
+SETUPDFP PRINTOBJ PRINTVALUES;
+@
+@ Load the data:
+@
+SMPL 1952.1 2013.3;
+LOADDATA FILE=IS.DAT;
+@ 
+@ Create the constant term:
+@
+CREATE CNST=1;
+@
+@ Generate the needed variables:
+@
+GENR LOGC=LOG(C);
+GENR LOGI=LOG(I);
+GENR LOGY=LOG(Y);
+@
+@ Create variables needed only for FSRs:
+@
+CREATE LOGG=LOG(G);
+@
+@ Create the time trend:
+@
+CAPITAL I=CNST K=T BENCHPER=1952.1 BENCHVAL=1. DEPRATE=0.;
+@
+@ Specify the equations and the LHS commands:
+@
+EQ 1 LOGC CNST LOGC(-1) LOGY R RHO=1;
+LHS C=EXP(LOGC);
+EQ 2 LOGI CNST LOGI(-1) LOGY R(-1);
+LHS I=EXP(LOGI);
+IDENT Y=C+I+G;
+@
+@ Specify the FSRs for each equation:
+@
+EQ 1 FSR CNST LOGC(-1) LOGC(-2) LOGY(-1) R(-1) LOGI(-1) LOGG;
+EQ 2 FSR CNST LOGC(-1) LOGC(-2) LOGY(-1) R(-1) LOGI(-1) LOGG;
+@
+@ Check the IDENT and LHS commands:
+@
+SMPL 2013.3 2013.3;
+CHECK IDENT;
+CHECK LHS;
+@
+@ Estimate the coefficients, S, and COV and save in files:
+@
+SMPL 1954.1 2013.3;
+2SLS S COV FILECOEF=ISCOEF2.BIN FILES=ISS2.BIN 
+ FILECOV=ISCOV2.BIN;
+EST 1 2;
+END;
+@
+@ Print the model for checking purposes (PRINTMODEL can also 
+@ be used):
+@
+PRINTCOV DIAG;
+@
+@ Perform an AP test of equationS 1 and 2:
+@
+SMPL 1954.1 2013.3;
+TESTSTAB2 1  1970.1 1979.4;
+TESTSTAB2 2  1970.1 1979.4;
+PRINTMODEL;
+@
+@ Perform an end-of-sample stability test:
+@
+SMPL 1952.1 2013.3;
+CREATE ZERO=0;
+SMPL 1954.1 2013.3;
+TESTEND2 1 1995.1 NAMEMISS=ZERO;
+TESTEND2 2 1995.1 NAMEMISS=ZERO;
+@
+@ Test equations 1 and 2 by adding lagged values.  Add FSRs first 
+@  to account for extra lags:
+@
+SETUPTEST PRINTTEST;
+SMPL 1954.1 2013.3;
+MODEQ 1 FSR LOGC(-3) LOGY(-2) R(-2);
+TEST2 1 LOGC(-2) LOGY(-1) R(-1);
+MODEQ 2 FSR LOGI(-2) R(-2);
+TEST2 2 LOGI(-2) LOGY(-1) R(-2);
+MODEQ 1 FSR - LOGC(-3) LOGY(-2) R(-2);
+MODEQ 2 FSR - LOGI(-2) R(-2);
+PRINTMODEL;
+@
+@ Test for perfect tracking solution:
+@
+SMPL 2011.4 2013.3;
+CREATEU;
+RMSE DYNAMIC FILEVAR=IS.VAR;
+ZEROU;
+@
+@ Solve the model and compute RMSEs for 2011.4-2013:3:
+@
+SMPL 2011.4 2013.3;
+RMSE DYNAMIC FILEVAR=IS.VAR;
+RMSEA LENGTH=4 FILEVAR=IS.VAR;
+@
+@ Do a multiplier experiment using CREATEU:
+@
+SMPL 2011.4 2013.3;
+CREATEU;
+CHANGEVAR;
+G ADDSAMEABS
+50.
+;
+RMSE DYNAMIC FILEVAR=IS.VAR;
+ZEROU;
+CHANGEVAR;
+G ADDSAMEABS
+-50.
+;
+@
+@ Do a multiplier experiment using MULT:
+@
+SMPL 2011.4 2013.3;
+CREATEU;
+XMULT G=G+50;
+MULT NOBASERUN FILEVAR=IS.VAR;
+ZEROU;
+@
+@ Estimate the model using 2SLAD:
+@
+SETUPEST -ALT2SLS;
+SMPL 1954.1 2013.3;
+2SLS; EST 1 2 ; END;
+2SLAD ;
+EST 1 2;
+END;
+SETUPEST ALT2SLS;
+@
+@ Read 2SLS coefficient estimates back in:
+@
+READCOEF FILE=ISCOEF2.BIN;
+@
+@ 3SLS estimation:
+@
+SMPL 1954.1 2013.3;
+PRINTS;
+3SLS FILEFSR=ISFSR3.DAT FILECOEF=ISCOEF3.BIN COV MAXITERS=30;
+PRINTS;
+PRINTCOV DIAG;
+@
+@ Get summary statistics for 3SLS:
+@
+SETUPEST PRINTONLY;
+2SLS;
+EST 1 2;
+END;
+SETUPEST -PRINTONLY;
+@
+@ Do 3SLS with S diagonal.  Should get 2SLS estimates.
+@
+READCOEF FILE=ISCOEF2.BIN;
+READS FILE=ISS2.BIN;
+PRINTS;
+3SLS FILEFSR=ISFSR3.DAT SDIAG COV MAXITERS=30;
+PRINTS;
+PRINTCOV DIAG;
+READCOEF FILE=ISCOEF2.BIN;
+READS FILE=ISS2.BIN;
+@
+@ FIML estimation:
+@
+SMPL 1954.1 2013.3;
+JACOB DERIV(1,1)= 1/C; 
+JACOB DERIV(3,1)= -COEF(3,1)/Y; 
+JACOB DERIV(2,2)= 1/I; 
+JACOB DERIV(3,2)= -COEF(3,2)/Y; 
+JACOB DERIV(3,3)= 1; 
+JACOB DERIV(1,3)= -1;
+JACOB DERIV(2,3)= -1;
+FIML FILECOEF=ISCOEF4.BIN COV MAXITERS=30;
+PRINTCOV DIAG;
+@
+@ Test DFP option for FIML:
+@
+READCOEF FILE=ISCOEF2.BIN;
+FIML DFP MAXITERS=30;
+READCOEF FILE=ISCOEF2.BIN;
+READS FILE=ISS2.BIN;
+READCOV FILE=ISCOV2.BIN;
+@
+@ The rest of this file consists of advanced commands that you may
+@ or may not want to examine.  If you do, comment out QUIT; below.
+@
+@QUIT;
+@
+@ Create historical errors to draw; center residuals at zero:
+@
+SMPL 1954.1 2013.3;
+CREATEU ZEROMEAN;
+@
+@ Set residuals in STOSIM:
+@
+STOSIM SETU;
+ZEROU;
+@
+@ Set the seed:
+@
+SEED VALUE=56789;
+@
+@ Don't print iteration numbers when solving:
+@
+SETUPSOLVE NOMSG;
+@
+@ Begin OPTC STOCHASTIC work
+@
+SETUPDFP PRINTOBJ STEPSIZE=.001;
+SMPL 1952.1 2013.3;
+CREATE YACT=Y;
+GENR TAR=((Y-YACT)/YACT)*((Y-YACT)/YACT);
+SMPL 1994.1 1998.4;
+CREATEU;
+@
+@ Do non stochastic first (should go nowhere):
+@
+OPTC TARGET=TAR FILECON=KEYBOARD MAXITERS=4;
+G
+;
+@
+@ Now do stochastic: (This is commented out for the
+@ example because it is costly in computer time.) 
+@
+@OPTC TARGET=TAR FILECON=KEYBOARD MAXITERS=4 
+@ STOCHASTIC NTRIALS=1000 DRAWUHIST FIRSTUHIST=1954.1 
+@ LASTUHIST=2013.3;
+@G
+@;
+@
+@ End OPTC STOCHASTIC work
+@
+@ Do stochastic simulation.
+@
+@ Draw error terms only; draw from estimated residuals.
+@
+SMPL 2011.4 2013.3;
+STOSIM NTRIALS=1000 FILEVAR=IS.VAR FILEMEDIAN=IS.VAR
+ DRAWUHIST FIRSTUHIST=1954.1 LASTUHIST=2013.3;
+@
+@ Draw error terms only; draw from estimated distribution.
+@
+SMPL 2011.4 2013.3;
+STOSIM NTRIALS=1000 FILEVAR=IS.VAR FILEMEDIAN=IS.VAR;
+@
+@ Draw error terms and coefficients; draw from distributions.
+@
+STOSIM NTRIALS=1000 FILEVAR=IS.VAR FILEMEDIAN=IS.VAR DRAWCOEF;
+@
+@ Estimate COV again because it has been destroyed by STOSIM.
+@
+SMPL 1954.1 2013.3;
+2SLS COV; END;
+@
+@ Prepare to draw exogenous variable values (for G).  First
+@ estimate autoregressive equations for G and save results.
+@
+AUTOREG ORDER=4 TIME FILESE=ISSEEXOG.TMP;
+C
+T
+G
+;
+@
+@ Draw error terms, coefficients, and exogenous variables.
+@
+SMPL 2011.4 2013.3;
+STOSIM NTRIALS=1000 FILEVAR=IS.VAR FILEMEDIAN=IS.VAR DRAWCOEF 
+ DRAWEXOG FILEEXOG=ISSEEXOG.TMP;
+@
+@ Now do successive reestimation and stochastic simulation.
+@ Estimate model 79 times and save results for command STOSIM.
+@
+SMPL 1954.1 1982.4;
+2SLS NSETS=123 COV S FILECOEF=ISCOEF.BIN FILECOV=ISCOV.BIN 
+ FILES=ISS.BIN PRINTLESS;
+EST 1 2;
+END;
+@
+@ First do outside sample RMSEs.
+@
+SMPL 1983.1 2013.3;
+RMSEA LENGTH=8 FILECOEF=ISCOEF.BIN FILEVAR=IS.VAR;
+@
+@ Now do 123 stochastic simulations and save results for other 
+@ commands.
+@
+STOSIM NTRIALS=1000 LENGTH=8 DRAWCOEF FILESTOSIM=ISSTOSIM.BIN 
+ NSETS=123 FILECOEF=ISCOEF.BIN FILECOV=ISCOV.BIN FILES=ISS.BIN 
+ FILEVAR=IS.VAR;
+@
+@ Analyze the stochastic simulation results.  Remember that 
+@ 123 stochastic simulations were made (NSETS=123 above), and so 
+@ NSETS must equal 123 for the following commands.  Also, the 
+@ sample period must remain the same, LENGTH must be 8, and 
+@ FILESTOSIM must equal ISSTOSIM.BIN.
+@
+TABLE8-1 FILEVAR=IS.VAR LENGTH=8 NSETS=123 FILESTOSIM=ISSTOSIM.BIN;
+TABLE8-3 FILEVAR=IS.VAR LENGTH=8 NSETS=123 FILESTOSIM=ISSTOSIM.BIN;
+DVALUES FILEVAR=IS.VAR LENGTH=8 NSETS=123 FILESTOSIM=ISSTOSIM.BIN
+ OLSLENGTH=2 TEMPVAR=ZERO FILEOLS=KEYBOARD;
+C
+T
+;
+;
+@
+@ Get back basic estimates:
+@ 
+SMPL 1954.1 2013.3;
+2SLS COV S; EST 1 2; END;
+@
+@ Do MULT and STOMULT:
+@
+SMPL 2011.4 2013.3;
+CREATEU;
+MULT FILEVAR=IS.VAR;
+STOMULT NTRIALS=1000 FILEVAR=IS.VAR;
+@
+@ Quit the job:
+@
+QUIT;
+
+

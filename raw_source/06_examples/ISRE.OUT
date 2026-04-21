@@ -1,0 +1,1724 @@
+                                                                                
+Enter "INPUT FILE=fn ;" (no quotes): 
+  Fair-Parke Program   November 11, 2013
+
+MAIN:  Space allowed in SPA    =  40000000
+       Space allowed in LA     =   2000000
+       Space allowed in DPA    =     20000
+       Space allowed in LSTACK =    500000
+       Space allowed in L      =      4000
+SPACE MAXVAR=200 MAXS=2 MAXCOEF=20  MAXFSR=30 FIRSTPER=1952.1                 
+ LASTPER=2013.3 MAXCOV=9;                                                     
+ISRE MODEL FOR FP PROGRAM  NOVEMBER 11, 2013                            
+Space allocations are:
+ MAXVAR     =       200
+ MAXS       =         2
+ MAXCOEF    =        20
+ MAXFSR     =        30
+ MAXCOV     =         9
+Quarterly data. FIRSTPER =  1952.1 LASTPER =  2013.3
+Initial space used:
+                Used          Allocated
+  SPA          302912      40000000
+  LA           607435       2000000
+  DPA             210         20000
+@                                                                             
+@ For solution, do at least 2 iterations:                                     
+@                                                                             
+SETUPSOLVE MINITERS=2 ;                                                       
+SETUPSOLVE options are:
+MAXITERS =     100
+MINITERS =       2
+MAXCHECK =       0
+TOLALL   =      0.001000000000
+DAMPALL  =      1.000000000000
+MAXERR   =       0
+-NOMISS
+-TOLALLABS
+-NOMSG
+-DEBUGPRINT
+-TESTEQS
+@                                                                             
+@ No missing values in IS MODEL:                                              
+@                                                                             
+SETUPSOLVE NOMISS;                                                            
+SETUPSOLVE options are:
+MAXITERS =     100
+MINITERS =       2
+MAXCHECK =       0
+TOLALL   =      0.001000000000
+DAMPALL  =      1.000000000000
+MAXERR   =       0
+NOMISS
+-TOLALLABS
+-NOMSG
+-DEBUGPRINT
+-TESTEQS
+@                                                                             
+@ Do not print iteration numbers:                                             
+@                                                                             
+SETUPSOLVE NOMSG;                                                             
+SETUPSOLVE options are:
+MAXITERS =     100
+MINITERS =       2
+MAXCHECK =       0
+TOLALL   =      0.001000000000
+DAMPALL  =      1.000000000000
+MAXERR   =       0
+NOMISS
+-TOLALLABS
+NOMSG
+-DEBUGPRINT
+-TESTEQS
+@                                                                             
+@ For estimation divide by T rather than T-K:                                 
+@                                                                             
+SETUPEST DIVIDET;                                                             
+SETUPEST options are:
+MAXRHO      =    50
+TOLRHO      =    0.000010000000
+MAXLAD      =    20
+TOLLAD      =    0.002000000000
+Q           =    0.500000000000
+DIVIDET
+-NOMISS
+-PRINTONLY
+-LOGLHS
+-ALT2SLS
+-HANSENM
+@                                                                             
+@ Use (6.13) and (6.14), p. 212, in Fair (1984) to compute the                
+@ 2SLS estimates:                                                             
+@                                                                             
+SETUPEST ALT2SLS;                                                             
+SETUPEST options are:
+MAXRHO      =    50
+TOLRHO      =    0.000010000000
+MAXLAD      =    20
+TOLLAD      =    0.002000000000
+Q           =    0.500000000000
+DIVIDET
+-NOMISS
+-PRINTONLY
+-LOGLHS
+ALT2SLS
+-HANSENM
+@                                                                             
+@ Set up some options for the DFP algorithm:                                  
+@                                                                             
+SETUPDFP PRINTOBJ PRINTVALUES;                                                
+
+SETUPDFP options are:
+STEPSIZE    =    0.000099999997
+TOLCOEF     =    0.000099999997
+TOLGRAD     =    0.000000100000
+PRINTOBJ
+PRINTVALUES
+-PRINTSEARCH
+-ONESIDED
+DFP
+@                                                                             
+@ Load the data:                                                              
+@                                                                             
+SMPL 1952.1 2013.3;                                                           
+Sample period is now  1952.1 to  2013.3 Internally:     1 to   247
+LOADDATA FILE=IS.DAT;                                                         
+ SMPL    1952.1   2013.3 ;                                                    
+Sample period is now  1952.1 to  2013.3 Internally:     1 to   247
+ LOAD C        ;                                                              
+Name C        not found.
+Name added to list: C       
+ LOAD I        ;                                                              
+Name I        not found.
+Name added to list: I       
+ LOAD Y        ;                                                              
+Name Y        not found.
+Name added to list: Y       
+ LOAD G        ;                                                              
+Name G        not found.
+Name added to list: G       
+ LOAD R        ;                                                              
+Name R        not found.
+Name added to list: R       
+ END;                                                                         
+@                                                                             
+@ Create the constant term:                                                   
+@                                                                             
+CREATE CNST=1;                                                                
+Name added to list: CNST            
+@                                                                             
+@ Generate the needed variables:                                              
+@                                                                             
+GENR LOGC=LOG(C);                                                             
+Name added to list: LOGC            
+GENR LOGI=LOG(I);                                                             
+Name added to list: LOGI            
+GENR LOGY=LOG(Y);                                                             
+Name added to list: LOGY            
+@                                                                             
+@ Create variables needed only for FSRs:                                      
+@                                                                             
+CREATE LOGG=LOG(G);                                                           
+Name added to list: LOGG            
+@                                                                             
+@ Specify the equations and the LHS commands:                                 
+@                                                                             
+EQ 1 LOGC CNST LOGC(-1) LOGY(2) R RHO=1;                                      
+EQUATION 1  LOGC  RHO=1  
+   RHS     CNST  LOGC(-1)  LOGY(2)  R  
+LHS C=EXP(LOGC);                                                              
+EQ 2 LOGI CNST LOGI(-1) LOGY(1) R(-1);                                        
+EQUATION 2  LOGI  
+   RHS     CNST  LOGI(-1)  LOGY(1)  R(-1)  
+LHS I=EXP(LOGI);                                                              
+IDENT Y=C+I+G;                                                                
+@                                                                             
+@ Specify the FSRs for each equation:                                         
+@                                                                             
+EQ 1 FSR CNST LOGC(-1) LOGC(-2) LOGY(-1) R(-1) LOGI(-1) LOGG                  
+;                                                                             
+EQUATION 1  LOGC  RHO=1  
+   RHS     CNST  LOGC(-1)  LOGY(2)  R  
+   FSR     CNST  LOGC(-1)  LOGC(-2)  LOGY(-1)  R(-1)  LOGI(-1)  
+   FSR     LOGG  
+EQ 2 FSR CNST LOGC(-1) LOGC(-2) LOGY(-1) R(-1) LOGI(-1) LOGG                  
+;                                                                             
+EQUATION 2  LOGI  
+   RHS     CNST  LOGI(-1)  LOGY(1)  R(-1)  
+   FSR     CNST  LOGC(-1)  LOGC(-2)  LOGY(-1)  R(-1)  LOGI(-1)  
+   FSR     LOGG  
+@                                                                             
+@ Check the IDENT and LHS commands:                                           
+@                                                                             
+SMPL 2013.1 2013.1;                                                           
+Sample period is now  2013.1 to  2013.1 Internally:   245 to   245
+CHECK IDENT;                                                                  
+Check IDENT:
+
+ Period is  2013.1
+             (PRED-ACT)/ACT          PRED                 ACT
+    1 C         0.00000000     2664.200000         2664.200000    
+    2 I         0.00000000     604.9999996         604.9999996    
+    3 Y         0.00000000     3895.975000         3895.975000    
+    4 G         0.00000000     626.7750004         626.7750004    
+    5 R         0.00000000    0.8666666667E-01    0.8666666667E-01
+    6 CNST      0.00000000     1.000000000         1.000000000    
+    7 LOGC      0.00000000     7.887659104         7.887659104    
+    8 LOGI      0.00000000     6.405228457         6.405228457    
+    9 LOGY      0.00000000     8.267699248         8.267699248    
+   10 LOGG      0.00000000     6.440587625         6.440587625    
+CHECK LHS;                                                                    
+Check LHS:
+
+ Period is  2013.1
+             (PRED-ACT)/ACT          PRED                 ACT
+    1 C         0.00000000     2664.200000         2664.200000    
+    2 I         0.00000000     604.9999996         604.9999996    
+    3 Y         0.00000000     3895.975000         3895.975000    
+    4 G         0.00000000     626.7750004         626.7750004    
+    5 R         0.00000000    0.8666666667E-01    0.8666666667E-01
+    6 CNST      0.00000000     1.000000000         1.000000000    
+    7 LOGC      0.00000000     7.887659104         7.887659104    
+    8 LOGI      0.00000000     6.405228457         6.405228457    
+    9 LOGY      0.00000000     8.267699248         8.267699248    
+   10 LOGG      0.00000000     6.440587625         6.440587625    
+@                                                                             
+@ Estimate the coefficients using Hansen's method and save them:              
+@                                                                             
+SMPL 1954.1 1998.4;                                                           
+Sample period is now  1954.1 to  1998.4 Internally:     9 to   188
+2SLS FILECOEF=ISRECOE2.BIN ;                                                  
+EST 1 HANSEN MA=1;                                                            
+
+Equation number =    1
+**********************
+
+Dependent variable = LOGC    
+
+ 1954.1 -   1998.4,    0 missing obs.,  180 obs. used.
+Estimation method is Hansen with structural autoregressive error of order    1
+and moving average error of order    1
+M estimated using (A2) in Hayashi and Sims (1983).
+
+First stage regressors 
+
+    6 CNST     (  0)
+    7 LOGC     ( -1)
+    7 LOGC     ( -2)
+    9 LOGY     ( -1)
+    5 R        ( -1)
+    8 LOGI     ( -1)
+   10 LOGG     (  0)
+
+Iter   Rhos:  1
+   1     0.237244850
+   2     0.271762227
+   3     0.281128418
+   4     0.283919018
+   5     0.284771787
+   6     0.285034351
+   7     0.285115378
+   8     0.285140402
+   9     0.285148134
+
+Number of iterations for RHO =    9
+
+Correlation coefficient(s) for U and U lagged I periods is (are):
+    1  -0.010968
+
+Iter   Rhos:  1
+   1     0.237642148
+   2     0.272038680
+   3     0.281338145
+   4     0.284098337
+   5     0.284938496
+   6     0.285196142
+   7     0.285275342
+   8     0.285299695
+   9     0.285307185
+
+Number of iterations for RHO =    9
+
+
+Mean of dependent variable        6.788107639
+
+                     Coef est             SE           T statistic      Mean
+    6 CNST    (  0)       0.019441747       0.044538036   0.43652     1.000000
+    7 LOGC    ( -1)       1.013494435       0.055832180  18.15251     6.779173
+    9 LOGY    (  2)      -0.013367360       0.058021818  -0.23039     7.257273
+    5 R       (  0)      -0.000889395       0.000297619  -2.98837     5.549365
+    0 RHO     ( -1)       0.285307185       0.082785764   3.44633     0.000000
+
+SE of equation            =     0.004941153
+Sum of squared residuals  = 0.439469930E-02   0.133921412E-04
+Average absolute error    =     0.003666720
+Sum of ABS residuals      = 0.660009654    
+R squared                 =   0.99988
+Durbin-Watson statistic   =   2.02210
+Overid test: p-value      = 0.00000         (df =   0)
+SMPL and No. Obs.         = 1954.1   1998.4    180
+UDU for 2SLS              =  233.208100    
+EST 2 HANSEN;                                                                 
+
+Equation number =    2
+**********************
+
+Dependent variable = LOGI    
+
+ 1954.1 -   1998.4,    0 missing obs.,  180 obs. used.
+Estimation method is Hansen with moving average error of order    0
+M estimated using (A2) in Hayashi and Sims (1983).
+
+First stage regressors 
+
+    6 CNST     (  0)
+    7 LOGC     ( -1)
+    7 LOGC     ( -2)
+    9 LOGY     ( -1)
+    5 R        ( -1)
+    8 LOGI     ( -1)
+   10 LOGG     (  0)
+
+Mean of dependent variable        5.277740395
+
+                     Coef est             SE           T statistic      Mean
+    6 CNST    (  0)      -0.179391197       0.090777750  -1.97616     1.000000
+    8 LOGI    ( -1)       0.957751926       0.031132393  30.76384     5.267396
+    9 LOGY    (  1)       0.059800815       0.034583108   1.72919     7.248636
+    5 R       ( -1)      -0.003831077       0.000719219  -5.32672     5.533993
+
+SE of equation            =     0.023670611
+Sum of squared residuals  = 0.100853606      -0.444407195E-07
+Average absolute error    =     0.018114113
+Sum of ABS residuals      =  3.26054035    
+R squared                 =   0.99765
+Durbin-Watson statistic   =   1.06857
+Overid test: p-value      = 0.00000         (df =   0)
+SMPL and No. Obs.         = 1954.1   1998.4    180
+UDU for 2SLS              =  6386.15117    
+END;                                                                          
+Copy 1 of coefficient matrix written to data set ISRECOE2.BIN    
+@                                                                             
+@ Print the model for checking purposes:                                      
+@                                                                             
+PRINTMODEL;                                                                   
+               THE STRUCTURAL MODEL
+               ********************
+
+
+             VALUE           NAME     LAG       NUM
+
+LOGC     EQUATION    1
+          0.0194417466    1  CNST               1
+          1.0134944354    2  LOGC     (-1)      2
+         -0.0133673596    3  LOGY    RE 2       3
+         -0.0008893954    4  R                  4
+          0.2853071851    5  RHO      (-1)      5
+
+LOGI     EQUATION    2
+         -0.1793911967    1  CNST               6
+          0.9577519261    2  LOGI     (-1)      7
+          0.0598008148    3  LOGY    RE 1       8
+         -0.0038310773    4  R        (-1)      9
+@                                                                             
+@ Set up the Jacobian for FIML:                                               
+@                                                                             
+JACOB DERIV(1,1)= 1/C;                                                        
+JACOB DERIV(2,2)= 1/I;                                                        
+JACOB DERIV(3,3)= 1;                                                          
+JACOB DERIV(1,3)= -1;                                                         
+JACOB DERIV(2,3)= -1;                                                         
+@                                                                             
+@ Set up RE options.  Note that KFIRST=KLAST, which save time.                
+@                                                                             
+@ ALTRHO=4                                                                    
+SETUPRE FILEENDO=KEYBOARD H=2 KFIRST=10 KLAST=10                              
+ NOMSG2 NOMSG3 NOMSGLIMIT3 MAXITERS2=25 TOL2=.00002 TOL3=.00003               
+ TOL4=.00004                                                                  
+ JFIRST=6 JLAST=6                                                             
+;                                                                             
+SETUPRE options are:
+H           =     2
+KFIRST      =    10
+KLAST       =    10
+JFIRST      =     6
+JLAST       =     6
+ALTRHO      =     0
+DAMP        =  1.0000000
+
+Names of expectational variables:
+LOGY          9
+MAXITERS2   =    25
+TOL2        =    0.000020000000
+TOL3        =    0.000030000000
+TOL4        =    0.000040000000
+-FIRSTONLY
+-SMALLEXOG
+-ABS2
+-ABS3
+-ABS4
+NOMSG2
+NOMSG3
+-NOMSG4
+-NOMSGLIMIT2
+NOMSGLIMIT3
+-NOMSGLIMIT4
+Warning. Because future observations are needed for a current-period solution,
+the last period that can be solved for is  2010.3 given the value of LASTPER.
+SETUPFIMLRE STEPSIZEDER=.001;                                                 
+SETUPFIMLRE options are:
+DAMPCOEF    =    1.000000000000
+TOLCOEF     =    0.002000000000
+STEPSIZEDER =    0.001000000000
+SETUPFIMLCOV MINCHANGE=.00000000001;                                          
+SETUPFIMLCOV options are:
+MINCHANGE   =    0.000000000010
+MAXCHANGE   =    0.000100000000
+STEPSIZE    =    0.010000000000
+-SKIPSEARCH
+-BRUTEFORCE
+-PRINTSTEPS
+@                                                                             
+@ Estimate the model by FIML using the derivative (cheap) method:             
+@                                                                             
+FIML RECHEAP REMAXITERS=2 FILEDERWRITE=ISREDER.BIN                            
+ FILEYEWRITE=ISREYE.BIN MAXITERS=30 REDER=0;                                  
+Number of nonzero Jacobian elements =        5
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS         5
+
+NUMBER OF JACOBIAN EQUATIONS                3
+
+
+IA VECTOR
+
+   1   2   3   6
+
+
+JA VECTOR
+
+   1   2   1   2   3
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  180
+Type IV iteration limit reached for J =    9 Execution continuing.
+Expectational values written to specified data set.
+FIML test function evaluation. F =     -520.0383503    
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     1
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     2
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     3
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     4
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     5
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     6
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     7
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     8
+Type IV iteration limit reached for J =    9 Execution continuing.
+Computing derivatives: model solved for the sample period. Coeff no. =     9
+Derivatives for expectations written to specified data set. ITER =    1
+Beginning of Parke algorithm
+         9 coefficients in the model
+         9 coefficients are in the kernel
+         0 coefficients are not in the kernel
+         0 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       1.013494435   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+      -0.013367360   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000889395   4 R                  3 **    1   5    0.5549E+01   9
+       0.285307185   5 RHO-1              4 **    3   5    0.0000E+00   5
+       0.019441747   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.957751926   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.059800815   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003831077   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.179391197   1 CONSTANT           9 **    2   9    0.1000E+01   6
+
+                1    objective function evaluations
+    -520.0383503     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   1.01348   0.000   1  -0.01330  -0.005   2  -0.00082  -0.084   3
+   0.09357  -0.672   4   0.01858  -0.045   5   0.95765   0.000   6
+   0.05996   0.003   7  -0.00377  -0.015   8  -0.18034   0.005   9
+
+               54    objective function evaluations
+    -516.0730138     objective function value
+     3.965336468     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    2
+   1.01338   0.000   1  -0.01323  -0.005   2  -0.00074  -0.088   3
+   0.09615   0.028   4   0.01837  -0.011   5   0.95763   0.000   6
+   0.06013   0.003   7  -0.00365  -0.032   8  -0.18212   0.010   9
+
+              113    objective function evaluations
+    -515.9595689     objective function value
+    0.1134449596     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    3
+   1.01278  -0.001   1  -0.01312  -0.008   2  -0.00071  -0.040   3
+   0.09387  -0.024   4   0.02150   0.171   5   0.95580  -0.002   6
+   0.06039   0.004   7  -0.00353  -0.033   8  -0.17500  -0.039   9
+
+              178    objective function evaluations
+    -515.8425194     objective function value
+    0.1170494649     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    4
+   1.00659  -0.006   1  -0.00610  -0.535   2  -0.00064  -0.107   3
+   0.09276  -0.012   4   0.01203  -0.440   5   0.94970  -0.006   6
+   0.06859   0.136   7  -0.00331  -0.062   8  -0.20363   0.164   9
+
+              249    objective function evaluations
+    -515.3171778     objective function value
+    0.5253416301     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    5
+   0.98406  -0.022   1   0.01658  -3.717   2  -0.00060  -0.053   3
+   0.05978  -0.356   4  -0.00002  -1.002   5   0.92332  -0.028   6
+   0.09523   0.388   7  -0.00319  -0.037   8  -0.25827   0.268   9
+
+              320    objective function evaluations
+    -513.4710567     objective function value
+     1.846121039     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    6
+   0.97771  -0.006   1   0.02351   0.418   2  -0.00062   0.027   3
+   0.06257   0.047   4  -0.00704 339.917   5   0.91771  -0.006   6
+   0.10221   0.073   7  -0.00355   0.113   8  -0.27734   0.074   9
+
+              391    objective function evaluations
+    -513.1864957     objective function value
+    0.2845610164     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    7
+   0.97509  -0.003   1   0.02629   0.118   2  -0.00061  -0.014   3
+   0.06216  -0.007   4  -0.00951   0.351   5   0.91777   0.000   6
+   0.10399   0.017   7  -0.00347  -0.023   8  -0.29102   0.049   9
+
+              462    objective function evaluations
+    -513.0178054     objective function value
+    0.1686902600     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    8
+   0.97273  -0.002   1   0.02892   0.100   2  -0.00061   0.003   3
+   0.06557   0.055   4  -0.01259   0.324   5   0.91672  -0.001   6
+   0.10487   0.008   7  -0.00347  -0.001   8  -0.29183   0.003   9
+
+              533    objective function evaluations
+    -512.9418830     objective function value
+    0.7592241510E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    9
+   0.96714  -0.006   1   0.03430   0.186   2  -0.00064   0.040   3
+   0.06663   0.016   4  -0.01359   0.079   5   0.91937   0.003   6
+   0.10031  -0.043   7  -0.00356   0.027   8  -0.27222  -0.067   9
+
+              605    objective function evaluations
+    -512.6895500     objective function value
+    0.2523330157     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   10
+   0.95939  -0.008   1   0.04320   0.260   2  -0.00060  -0.061   3
+   0.05542  -0.168   4  -0.02584   0.901   5   0.94055   0.023   6
+   0.08040  -0.198   7  -0.00377   0.059   8  -0.23837  -0.124   9
+
+              676    objective function evaluations
+    -511.7464499     objective function value
+    0.9431001236     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   11
+   0.95077  -0.009   1   0.05159   0.194   2  -0.00057  -0.052   3
+   0.05964   0.076   4  -0.02845   0.101   5   0.95963   0.020   6
+   0.05715  -0.289   7  -0.00372  -0.014   8  -0.17062  -0.284   9
+
+              748    objective function evaluations
+    -511.1766574     objective function value
+    0.5697925033     objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   12
+   0.95135   0.001   1   0.05103  -0.011   2  -0.00056  -0.016   3
+   0.05759  -0.034   4  -0.02831  -0.005   5   0.96111   0.002   6
+   0.05562  -0.027   7  -0.00370  -0.005   8  -0.16745  -0.019   9
+
+              820    objective function evaluations
+    -511.1646502     objective function value
+    0.1200716661E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   13
+   0.95173   0.000   1   0.05059  -0.009   2  -0.00056  -0.004   3
+   0.05625  -0.023   4  -0.02778  -0.019   5   0.96152   0.000   6
+   0.05504  -0.010   7  -0.00369  -0.003   8  -0.16548  -0.012   9
+
+              892    objective function evaluations
+    -511.1630434     objective function value
+    0.1606844309E-02 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration   14
+   0.95172   0.000   1   0.05061   0.000   2  -0.00056   0.001   3
+   0.05616  -0.002   4  -0.02779   0.001   5   0.96150   0.000   6
+   0.05506   0.000   7  -0.00369   0.000   8  -0.16552   0.000   9
+
+              966    objective function evaluations
+    -511.1630324     objective function value
+    0.1098453777E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951717203   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050606800   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000555977   4 R                  3 **    1   5    0.5549E+01   9
+       0.056157327   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027790284   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961499996   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055063376   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003690439   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165520379   1 CONSTANT           9 **    2   9    0.1000E+01   6
+Type IV iteration limit reached for J =    9 Execution continuing.
+Expectational values written to specified data set.
+FIML test function evaluation. F =     -511.2378119    
+Beginning of Parke algorithm
+         9 coefficients in the model
+         9 coefficients are in the kernel
+         0 coefficients are not in the kernel
+         0 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951717203   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050606800   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000555977   4 R                  3 **    1   5    0.5549E+01   9
+       0.056157327   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027790284   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961499996   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055063376   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003690439   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165520379   1 CONSTANT           9 **    2   9    0.1000E+01   6
+
+                1    objective function evaluations
+    -511.2378119     objective function value
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    1
+   0.95170   0.000   1   0.05059   0.000   2  -0.00056   0.001   3
+   0.05552  -0.011   4  -0.02767  -0.004   5   0.96149   0.000   6
+   0.05506   0.000   7  -0.00369   0.000   8  -0.16547   0.000   9
+
+               53    objective function evaluations
+    -511.1516960     objective function value
+    0.8611593796E-01 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    2
+   0.95170   0.000   1   0.05059   0.000   2  -0.00056   0.002   3
+   0.05393  -0.029   4  -0.02769   0.001   5   0.96148   0.000   6
+   0.05506   0.000   7  -0.00369   0.001   8  -0.16544   0.000   9
+
+              113    objective function evaluations
+    -511.1512949     objective function value
+    0.4011360284E-03 objective function increase
+                   1 KTYPE
+
+Coefficients and percentage changes after iteration    3
+   0.95171   0.000   1   0.05059   0.000   2  -0.00056   0.001   3
+   0.05398   0.001   4  -0.02774   0.002   5   0.96151   0.000   6
+   0.05506   0.000   7  -0.00370   0.001   8  -0.16558   0.001   9
+
+              179    objective function evaluations
+    -511.1512405     objective function value
+    0.5433126557E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951711103   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050590031   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000558552   4 R                  3 **    1   5    0.5549E+01   9
+       0.053983089   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027740599   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961511578   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055059887   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003695045   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165576912   1 CONSTANT           9 **    2   9    0.1000E+01   6
+Iteration limit reached for RECHEAP. Execution continuing.
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Estimate the COV matrix:                                                    
+@                                                                             
+FIML RECHEAP FILEDERREAD=ISREDER.BIN MAXITERS=0 COV ;                         
+Number of nonzero Jacobian elements =        5
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS         5
+
+NUMBER OF JACOBIAN EQUATIONS                3
+
+
+IA VECTOR
+
+   1   2   3   6
+
+
+JA VECTOR
+
+   1   2   1   2   3
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  180
+Type IV iteration limit reached for J =    9 Execution continuing.
+FIML test function evaluation. F =     -511.1508655    
+Derivatives read from specified data set.
+Beginning of Parke algorithm
+         9 coefficients in the model
+         9 coefficients are in the kernel
+         0 coefficients are not in the kernel
+         0 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951711103   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050590031   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000558552   4 R                  3 **    1   5    0.5549E+01   9
+       0.053983089   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027740599   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961511578   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055059887   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003695045   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165576912   1 CONSTANT           9 **    2   9    0.1000E+01   6
+    0.1000000000E-10    0.1000000000E-03
+FIML covariance matrix routine
+    0.1000000000E-10    0.1000000000E-03
+    -511.1509655     FLOW    -511.1508655     FHIGH    -511.1508655     FTOP
+
+  COV#  B#  IPP#    F DIFF         COEF PCT         UMEAN
+ 
+    1    1    2   0.581979E-04   0.781250E-05    0.16108E-05 ------- FINAL F
+    2    2    3   0.521877E-04   0.125000E-03    0.15186E-05 ------- FINAL F
+    3    3    4   0.127567E-04   0.100000E-02    0.16457E-05 ------- FINAL F
+    4    4    5   0.966737E-06   0.100000E-02    0.16491E-05 ------- FINAL F
+    5    5    1   0.488001E-04   0.625000E-04    0.34317E-05 ------- FINAL F
+    6    6    7   0.429193E-04   0.312500E-04    0.34521E-06 ------- FINAL F
+    7    7    8   0.303635E-04   0.500000E-03    0.12240E-06 ------- FINAL F
+    8    8    9   0.229655E-04   0.100000E-02    0.37528E-06 ------- FINAL F
+    9    9    6   0.726152E-04   0.125000E-03    0.21383E-04 ------- FINAL F
+2ND PARTIALS     1      42 F EVAL
+2ND PARTIALS     2      50 F EVAL
+2ND PARTIALS     3      57 F EVAL
+2ND PARTIALS     4      63 F EVAL
+2ND PARTIALS     5      68 F EVAL
+2ND PARTIALS     6      72 F EVAL
+2ND PARTIALS     7      75 F EVAL
+2ND PARTIALS     8      77 F EVAL
+2ND PARTIALS     9      78 F EVAL
+
+ALPHA HESSIAN MATRIX WRITTEN ON UNIT 58
+COV matrix is positive definite. Inversion successful.
+
+ALPHA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.175735E-01    1   0.182843E-01    2   0.142236E-03    3
+   0.628593E-01    4   0.437361E-03    5   0.282211E-01    6
+   0.314007E-01    7   0.705291E-03    8   0.178120E-02    9
+
+BETA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.175735E-01    1   0.182843E-01    2   0.142236E-03    3
+   0.628593E-01    4   0.148978E-01    5   0.282211E-01    6
+   0.314007E-01    7   0.705291E-03    8   0.832752E-01    9
+
+COVARIANCE MATRIX FINISHED
+                   9 ROWS AND COLUMNS 
+                  78 OBJECTIVE FUNCTION EVALUATIONS
+    -511.1508655     OBJECTIVE FUNCTION VALUE
+Convergence reached for RECHEAP after      1 iterations.
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Print COV, S, and the model:                                                
+@                                                                             
+PRINTCOV;                                                                     
+                                   THE STRUCTURAL MODEL
+                                   ********************
+
+
+             VALUE           NAME     LAG       NUM   T STAT      SE      NUM
+
+LOGC     EQUATION    1
+         -0.0277405990    1  CNST               1   -1.86    0.014898   1
+          0.9517111025    2  LOGC     (-1)      2   54.16    0.017573   2
+          0.0505900309    3  LOGY    RE 2       3    2.77    0.018284   3
+         -0.0005585522    4  R                  4   -3.93    0.000142   4
+          0.0539830894    5  RHO      (-1)      5    0.86    0.062859   5
+
+LOGI     EQUATION    2
+         -0.1655769115    1  CNST               6   -1.99    0.083275   6
+          0.9615115784    2  LOGI     (-1)      7   34.07    0.028221   7
+          0.0550598868    3  LOGY    RE 1       8    1.75    0.031401   8
+         -0.0036950451    4  R        (-1)      9   -5.24    0.000705   9
+Covariance Matrix
+Covariances for number   1
+   1-   5!  0.2219E-03  0.2398E-03 -0.2543E-03 -0.3867E-06  0.1296E-04
+   6-   9! -0.6122E-04 -0.5574E-04  0.4797E-04  0.1321E-05
+Covariances for number   2
+   1-   5!  0.2398E-03  0.3088E-03 -0.3210E-03 -0.8482E-06  0.9928E-05
+   6-   9! -0.2026E-03 -0.7750E-04  0.8352E-04  0.9438E-06
+Covariances for number   3
+   1-   5! -0.2543E-03 -0.3210E-03  0.3343E-03  0.8304E-06 -0.1051E-04
+   6-   9!  0.1964E-03  0.7976E-04 -0.8419E-04 -0.1091E-05
+Covariances for number   4
+   1-   5! -0.3867E-06 -0.8482E-06  0.8304E-06  0.2023E-07 -0.6551E-06
+   6-   9!  0.1514E-05  0.3383E-06 -0.4825E-06  0.3654E-07
+Covariances for number   5
+   1-   5!  0.1296E-04  0.9928E-05 -0.1051E-04 -0.6551E-06  0.3951E-02
+   6-   9!  0.2162E-03  0.8593E-04 -0.9156E-04 -0.9550E-06
+Covariances for number   6
+   1-   5! -0.6122E-04 -0.2026E-03  0.1964E-03  0.1514E-05  0.2162E-03
+   6-   9!  0.6935E-02  0.2175E-02 -0.2537E-02  0.5494E-06
+Covariances for number   7
+   1-   5! -0.5574E-04 -0.7750E-04  0.7976E-04  0.3383E-06  0.8593E-04
+   6-   9!  0.2175E-02  0.7964E-03 -0.8767E-03 -0.2747E-05
+Covariances for number   8
+   1-   5!  0.4797E-04  0.8352E-04 -0.8419E-04 -0.4825E-06 -0.9156E-04
+   6-   9! -0.2537E-02 -0.8767E-03  0.9860E-03  0.1541E-05
+Covariances for number   9
+   1-   5!  0.1321E-05  0.9438E-06 -0.1091E-05  0.3654E-07 -0.9550E-06
+   6-   9!  0.5494E-06 -0.2747E-05  0.1541E-05  0.4974E-06
+PRINTS;                                                                       
+S matrix  --  Regular Version
+Eq. =    1. Diag elem =    0.239836E-04. Sqrt diag elem =    0.489731E-02
+  0.240E-04   1  0.265E+01   2
+Eq. =    2. Diag elem =    0.581416E-03. Sqrt diag elem =    0.241126E-01
+  0.636E-04   1  0.581E-03   2
+PRINTCOV DIAG;                                                                
+                                   THE STRUCTURAL MODEL
+                                   ********************
+
+
+             VALUE           NAME     LAG       NUM   T STAT      SE      NUM
+
+LOGC     EQUATION    1
+         -0.0277405990    1  CNST               1   -1.86    0.014898   1
+          0.9517111025    2  LOGC     (-1)      2   54.16    0.017573   2
+          0.0505900309    3  LOGY    RE 2       3    2.77    0.018284   3
+         -0.0005585522    4  R                  4   -3.93    0.000142   4
+          0.0539830894    5  RHO      (-1)      5    0.86    0.062859   5
+
+LOGI     EQUATION    2
+         -0.1655769115    1  CNST               6   -1.99    0.083275   6
+          0.9615115784    2  LOGI     (-1)      7   34.07    0.028221   7
+          0.0550598868    3  LOGY    RE 1       8    1.75    0.031401   8
+         -0.0036950451    4  R        (-1)      9   -5.24    0.000705   9
+@                                                                             
+@ Estimate the model by FIML regular way:                                     
+@                                                                             
+FIML MAXITERS=30;                                                             
+Number of nonzero Jacobian elements =        5
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS         5
+
+NUMBER OF JACOBIAN EQUATIONS                3
+
+
+IA VECTOR
+
+   1   2   3   6
+
+
+JA VECTOR
+
+   1   2   1   2   3
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  180
+Type IV iteration limit reached for J =    9 Execution continuing.
+FIML test function evaluation. F =     -511.1508655    
+Beginning of Parke algorithm
+         9 coefficients in the model
+         9 coefficients are in the kernel
+         0 coefficients are not in the kernel
+         0 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951711103   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050590031   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000558552   4 R                  3 **    1   5    0.5549E+01   9
+       0.053983089   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027740599   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961511578   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055059887   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003695045   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165576912   1 CONSTANT           9 **    2   9    0.1000E+01   6
+Type IV iteration limit reached for J =    9 Execution continuing.
+
+                1    objective function evaluations
+    -511.1509323     objective function value
+                   1 KTYPE
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+
+Coefficients and percentage changes after iteration    1
+   0.95171   0.000   1   0.05059   0.000   2  -0.00056   0.000   3
+   0.05358  -0.008   4  -0.02774   0.000   5   0.96151   0.000   6
+   0.05506   0.000   7  -0.00370   0.000   8  -0.16558   0.000   9
+Type IV iteration limit reached for J =    9 Execution continuing.
+
+               57    objective function evaluations
+    -511.1508957     objective function value
+    0.3665369354E-04 objective function increase
+                   1 KTYPE
+Parke algorithm halted.
+Changes in F smaller than SPA(19).  SPA(19) =     0.1000000000D-03
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951711103   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050590031   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000558485   4 R                  3 **    1   5    0.5549E+01   9
+       0.053576691   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027739154   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961511849   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055059887   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003695033   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165575890   1 CONSTANT           9 **    2   9    0.1000E+01   6
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Estimate the COV matrix:                                                    
+@                                                                             
+FIML MAXITERS=0 COV ;                                                         
+Number of nonzero Jacobian elements =        5
+
+
+NUMBER OF NONZERO JACOBIAN ELEMENTS         5
+
+NUMBER OF JACOBIAN EQUATIONS                3
+
+
+IA VECTOR
+
+   1   2   3   6
+
+
+JA VECTOR
+
+   1   2   1   2   3
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+***** DKO10152 RAISED ERROR INDICATOR TO 1000 *****
+Interpolation points for the Jacobian are:
+    1    1
+    2  180
+Type IV iteration limit reached for J =    9 Execution continuing.
+FIML test function evaluation. F =     -511.1508290    
+Beginning of Parke algorithm
+         9 coefficients in the model
+         9 coefficients are in the kernel
+         0 coefficients are not in the kernel
+         0 coefficients are constrained
+
+         VALUE         NAME     LAG     NUM     TYPE  CON    ZMEAN     NZ   
+
+LOGC     Equation    1
+       0.951711103   2 LOGC     (-1)      1 **    1   5    0.6779E+01   6
+       0.050590031   3 LOGY    RE 2       2 **    1   5    0.7240E+01   7
+      -0.000558485   4 R                  3 **    1   5    0.5549E+01   9
+       0.053576691   5 RHO-1              4 **    3   5    0.0000E+00   5
+      -0.027739154   1 CONSTANT           5 **    2   5    0.1000E+01   1
+
+LOGI     Equation    2
+       0.961511849   2 LOGI     (-1)      6 **    1   9    0.5267E+01   8
+       0.055059887   3 LOGY    RE 1       7 **    1   9    0.7240E+01   9
+      -0.003695033   4 R        (-1)      8 **    1   9    0.5534E+01   5
+      -0.165575890   1 CONSTANT           9 **    2   9    0.1000E+01   6
+    0.1000000000E-10    0.1000000000E-03
+Type IV iteration limit reached for J =    9 Execution continuing.
+FIML covariance matrix routine
+    0.1000000000E-10    0.1000000000E-03
+    -511.1509957     FLOW    -511.1508957     FHIGH    -511.1508957     FTOP
+
+  COV#  B#  IPP#    F DIFF         COEF PCT         UMEAN
+ 
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+    1    1    2   0.626581E-04   0.781250E-05   -0.38052E-06 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+    2    2    3   0.568882E-04   0.125000E-03   -0.48979E-06 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+    3    3    4   0.166259E-04   0.100000E-02   -0.35765E-06 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+    4    4    5   0.296767E-06   0.100000E-02   -0.35514E-06 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+    5    5    1   0.682440E-04   0.125000E-03    0.32678E-05 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+    6    6    7   0.449384E-04   0.312500E-04   -0.23428E-05 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+    7    7    8   0.326482E-04   0.500000E-03   -0.25760E-05 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+    8    8    9   0.270679E-04   0.100000E-02   -0.23206E-05 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+    9    9    6   0.880248E-04   0.125000E-03    0.18735E-04 ------- FINAL F
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     1      41 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     2      49 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     3      56 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     4      62 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     5      67 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     6      71 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     7      74 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     8      76 F EVAL
+Type IV iteration limit reached for J =    9 Execution continuing.
+2ND PARTIALS     9      77 F EVAL
+
+ALPHA HESSIAN MATRIX WRITTEN ON UNIT 58
+COV matrix is positive definite. Inversion successful.
+
+ALPHA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.176446E-01    1   0.183488E-01    2   0.140213E-03    3
+   0.642609E-01    4   0.455024E-03    5   0.282985E-01    6
+   0.314666E-01    7   0.703106E-03    8   0.177583E-02    9
+
+BETA COVARIANCE MATRIX STANDARD ERRORS
+ 
+   0.176446E-01    1   0.183488E-01    2   0.140213E-03    3
+   0.642609E-01    4   0.148779E-01    5   0.282985E-01    6
+   0.314666E-01    7   0.703106E-03    8   0.833387E-01    9
+
+COVARIANCE MATRIX FINISHED
+                   9 ROWS AND COLUMNS 
+                  77 OBJECTIVE FUNCTION EVALUATIONS
+    -511.1508957     OBJECTIVE FUNCTION VALUE
+WARNING: Residuals set to zero for the estimation period.
+Also, all stochastic equations included in the model.
+@                                                                             
+@ Print COV, S, and the model:                                                
+@                                                                             
+PRINTCOV;                                                                     
+                                   THE STRUCTURAL MODEL
+                                   ********************
+
+
+             VALUE           NAME     LAG       NUM   T STAT      SE      NUM
+
+LOGC     EQUATION    1
+         -0.0277391537    1  CNST               1   -1.86    0.014878   1
+          0.9517111025    2  LOGC     (-1)      2   53.94    0.017645   2
+          0.0505900309    3  LOGY    RE 2       3    2.76    0.018349   3
+         -0.0005584847    4  R                  4   -3.98    0.000140   4
+          0.0535766914    5  RHO      (-1)      5    0.83    0.064261   5
+
+LOGI     EQUATION    2
+         -0.1655758895    1  CNST               6   -1.99    0.083339   6
+          0.9615118487    2  LOGI     (-1)      7   33.98    0.028299   7
+          0.0550598868    3  LOGY    RE 1       8    1.75    0.031467   8
+         -0.0036950330    4  R        (-1)      9   -5.26    0.000703   9
+Covariance Matrix
+Covariances for number   1
+   1-   5!  0.2214E-03  0.2412E-03 -0.2555E-03 -0.4027E-06 -0.2831E-05
+   6-   9! -0.8154E-04 -0.6157E-04  0.5502E-04  0.1324E-05
+Covariances for number   2
+   1-   5!  0.2412E-03  0.3113E-03 -0.3234E-03 -0.8574E-06 -0.1048E-04
+   6-   9! -0.2182E-03 -0.8306E-04  0.8971E-04  0.9864E-06
+Covariances for number   3
+   1-   5! -0.2555E-03 -0.3234E-03  0.3367E-03  0.8414E-06  0.1066E-04
+   6-   9!  0.2139E-03  0.8580E-04 -0.9100E-04 -0.1130E-05
+Covariances for number   4
+   1-   5! -0.4027E-06 -0.8574E-06  0.8414E-06  0.1966E-07 -0.5532E-06
+   6-   9!  0.1500E-05  0.3454E-06 -0.4843E-06  0.3463E-07
+Covariances for number   5
+   1-   5! -0.2831E-05 -0.1048E-04  0.1066E-04 -0.5532E-06  0.4129E-02
+   6-   9!  0.2295E-03  0.9126E-04 -0.9727E-04 -0.9625E-06
+Covariances for number   6
+   1-   5! -0.8154E-04 -0.2182E-03  0.2139E-03  0.1500E-05  0.2295E-03
+   6-   9!  0.6945E-02  0.2185E-02 -0.2545E-02  0.1658E-06
+Covariances for number   7
+   1-   5! -0.6157E-04 -0.8306E-04  0.8580E-04  0.3454E-06  0.9126E-04
+   6-   9!  0.2185E-02  0.8008E-03 -0.8811E-03 -0.2862E-05
+Covariances for number   8
+   1-   5!  0.5502E-04  0.8971E-04 -0.9100E-04 -0.4843E-06 -0.9727E-04
+   6-   9! -0.2545E-02 -0.8811E-03  0.9901E-03  0.1679E-05
+Covariances for number   9
+   1-   5!  0.1324E-05  0.9864E-06 -0.1130E-05  0.3463E-07 -0.9625E-06
+   6-   9!  0.1658E-06 -0.2862E-05  0.1679E-05  0.4944E-06
+PRINTS;                                                                       
+S matrix  --  Regular Version
+Eq. =    1. Diag elem =    0.239882E-04. Sqrt diag elem =    0.489777E-02
+  0.240E-04   1  0.265E+01   2
+Eq. =    2. Diag elem =    0.581418E-03. Sqrt diag elem =    0.241126E-01
+  0.636E-04   1  0.581E-03   2
+PRINTCOV DIAG;                                                                
+                                   THE STRUCTURAL MODEL
+                                   ********************
+
+
+             VALUE           NAME     LAG       NUM   T STAT      SE      NUM
+
+LOGC     EQUATION    1
+         -0.0277391537    1  CNST               1   -1.86    0.014878   1
+          0.9517111025    2  LOGC     (-1)      2   53.94    0.017645   2
+          0.0505900309    3  LOGY    RE 2       3    2.76    0.018349   3
+         -0.0005584847    4  R                  4   -3.98    0.000140   4
+          0.0535766914    5  RHO      (-1)      5    0.83    0.064261   5
+
+LOGI     EQUATION    2
+         -0.1655758895    1  CNST               6   -1.99    0.083339   6
+          0.9615118487    2  LOGI     (-1)      7   33.98    0.028299   7
+          0.0550598868    3  LOGY    RE 1       8    1.75    0.031467   8
+         -0.0036950330    4  R        (-1)      9   -5.26    0.000703   9
+@                                                                             
+@ Solve the model:                                                            
+@                                                                             
+SMPL 1998.1 1998.4;                                                           
+Sample period is now  1998.1 to  1998.4 Internally:   185 to   188
+RMSE DYNAMIC FILEVAR=IS.VAR;                                                  
+Type IV iteration limit reached for J =  185 Execution continuing.
+Warning. Residuals set to zero.
+
+Results for the period  1998.1 -  1998.4
+Simulation is dynamic.
+
+          Actual         Predicted      Error     %Error
+
+     1  C       
+
+ 1998.1   1828.9000000   1828.0822019     -0.8177981   -0.00045
+ 1998.2   1857.8000000   1846.7498782    -11.0501218   -0.00595
+ 1998.3   1880.7000000   1865.7479314    -14.9520686   -0.00795
+ 1998.4   1903.6250000   1885.1477663    -18.4772337   -0.00971
+
+RMSE     =      13.1124607   RMSE%    =     0.00695
+MAE      =      11.3243055   MAE%     =     0.00601
+MEANERR  =     -11.3243055   MEAN%ERR =   -0.00601
+
+     2  I       
+
+ 1998.1    473.1750000    468.1426395     -5.0323605   -0.01064
+ 1998.2    489.0500000    476.3409781    -12.7090219   -0.02599
+ 1998.3    498.5250000    484.8598919    -13.6651081   -0.02741
+ 1998.4    512.0500000    493.7335658    -18.3164342   -0.03577
+
+RMSE     =      13.3141920   RMSE%    =     0.02655
+MAE      =      12.4307312   MAE%     =     0.02495
+MEANERR  =     -12.4307312   MEAN%ERR =   -0.02495
+
+     3  Y       
+
+ 1998.1   2827.2500000   2821.3998414     -5.8501586   -0.00207
+ 1998.2   2854.6750000   2830.9158563    -23.7591437   -0.00832
+ 1998.3   2892.0250000   2863.4078233    -28.6171767   -0.00990
+ 1998.4   2939.4750000   2902.6813321    -36.7936679   -0.01252
+
+RMSE     =      26.3222247   RMSE%    =     0.00906
+MAE      =      23.7550367   MAE%     =     0.00820
+MEANERR  =     -23.7550367   MEAN%ERR =   -0.00820
+@                                                                             
+@ Do stochastic simulation:                                                   
+@                                                                             
+SMPL 1998.1 1998.4;                                                           
+Sample period is now  1998.1 to  1998.4 Internally:   185 to   188
+STOSIM NTRIALS=100 FILEVAR=IS.VAR FILEMEDIAN=KEYBOARD DRAWCOEF;               
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Results for stochastic simulation. Number of trials =    100
+Simulation period is  1998.1 -  1998.4
+Structural error terms drawn.
+Coefficients drawn.
+Rows are:
+ 1 Actual values
+  2 Predicted values from deterministic simulation
+  3 Mean values from stochastic simulation
+  4 Standard errors
+  5 Standard error/mean
+ 44 Variances (Row 4 squared)
+ 66 Standard error of Row 44
+ 55 Variance/(mean**2)  (Row 5 squared)
+  6 Median
+  7 LHS .34135 - Median
+  8 RHS .34135 - Median
+  9 (RHS .34135 - LHS .34135)/2
+ 10 (RHS .34135 - LHS .34135)/2/Median
+ 11 LHS .475
+ 12 RHS .475
+ 13 LHS .45
+ 14 RHS .45
+ 15 Smallest value
+ 16 Largest value
+ 17 Range
+ 18 Range/Median
+
+  1 C         1828.9      1857.8      1880.7      1903.6    
+       2      1805.3      1942.4      3169.1      8886.8    
+       3      1828.2      1847.4      1867.9      1888.5    
+       4      8.3189      12.865      14.938      18.666    
+       5     0.45503E-02 0.69639E-02 0.79970E-02 0.98843E-02
+      44      69.204      165.51      223.14      348.42    
+      66      8.9239      19.673      32.066      56.861    
+      55     0.20705E-04 0.48496E-04 0.63952E-04 0.97700E-04
+       6      1829.4      1848.3      1869.8      1892.5    
+       7     -10.030     -15.215     -18.273     -23.917    
+       8      6.8645      12.568      11.601      13.453    
+       9      8.4472      13.891      14.937      18.685    
+      10     0.46174E-02 0.75160E-02 0.79886E-02 0.98733E-02
+      11      1809.4      1821.6      1843.2      1851.4    
+      12      1843.9      1872.3      1892.5      1924.4    
+      13      1814.0      1826.1      1843.4      1859.7    
+      14      1840.7      1867.5      1889.7      1913.0    
+      15      1806.7      1816.2      1825.7      1836.9    
+      16      1844.6      1873.7      1913.3      1954.3    
+      17      37.907      57.488      87.538      117.40    
+      18     0.20721E-01 0.31104E-01 0.46817E-01 0.62037E-01
+
+  2 I         473.18      489.05      498.52      512.05    
+       2      469.10      487.54      531.68      911.44    
+       3      468.53      476.49      485.88      497.35    
+       4      11.116      16.543      19.925      22.859    
+       5     0.23725E-01 0.34719E-01 0.41008E-01 0.45961E-01
+      44      123.57      273.68      397.01      522.54    
+      66      16.144      44.871      63.597      80.208    
+      55     0.56289E-03 0.12054E-02 0.16817E-02 0.21124E-02
+       6      468.96      475.31      486.92      499.28    
+       7     -12.567     -12.157     -20.141     -25.101    
+       8      10.409      18.921      16.577      18.397    
+       9      11.488      15.539      18.359      21.749    
+      10     0.24496E-01 0.32692E-01 0.37705E-01 0.43560E-01
+      11      446.83      435.52      443.91      445.42    
+      12      487.48      506.16      522.51      537.39    
+      13      447.70      452.27      451.45      454.01    
+      14      485.21      502.12      516.85      532.92    
+      15      443.80      429.20      430.32      436.52    
+      16      497.19      522.53      548.03      565.71    
+      17      53.396      93.329      117.71      129.19    
+      18     0.11386     0.19636     0.24175     0.25875    
+
+  3 Y         2827.2      2854.7      2892.0      2939.5    
+       2      2799.5      2937.8      4213.6      10322.    
+       3      2821.9      2831.7      2866.6      2909.6    
+       4      17.451      25.996      29.746      36.072    
+       5     0.61839E-02 0.91801E-02 0.10377E-01 0.12398E-01
+      44      304.52      675.77      884.84      1301.2    
+      66      39.753      94.442      126.27      184.68    
+      55     0.38241E-04 0.84274E-04 0.10768E-03 0.15370E-03
+       6      2824.2      2831.2      2867.6      2914.8    
+       7     -20.356     -22.576     -29.468     -40.527    
+       8      14.213      26.511      27.009      28.015    
+       9      17.284      24.543      28.238      34.271    
+      10     0.61201E-02 0.86687E-02 0.98474E-02 0.11758E-01
+      11      2785.1      2774.0      2803.8      2828.0    
+      12      2852.8      2881.2      2927.2      2987.2    
+      13      2791.6      2791.3      2813.7      2850.4    
+      14      2846.9      2879.1      2922.8      2966.4    
+      15      2780.6      2767.0      2790.2      2806.1    
+      16      2863.6      2892.9      2930.0      2988.3    
+      17      83.027      125.94      139.77      182.19    
+      18     0.29399E-01 0.44484E-01 0.48742E-01 0.62503E-01
+Warning: COV destroyed. You need to read it back in for further use.
+STOSIM NTRIALS=100 FILEVAR=IS.VAR FILEMEDIAN=KEYBOARD ;                       
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Type IV iteration limit reached for J =  185 Execution continuing.
+Results for stochastic simulation. Number of trials =    100
+Simulation period is  1998.1 -  1998.4
+Structural error terms drawn.
+Rows are:
+ 1 Actual values
+  2 Predicted values from deterministic simulation
+  3 Mean values from stochastic simulation
+  4 Standard errors
+  5 Standard error/mean
+ 44 Variances (Row 4 squared)
+ 66 Standard error of Row 44
+ 55 Variance/(mean**2)  (Row 5 squared)
+  6 Median
+  7 LHS .34135 - Median
+  8 RHS .34135 - Median
+  9 (RHS .34135 - LHS .34135)/2
+ 10 (RHS .34135 - LHS .34135)/2/Median
+ 11 LHS .475
+ 12 RHS .475
+ 13 LHS .45
+ 14 RHS .45
+ 15 Smallest value
+ 16 Largest value
+ 17 Range
+ 18 Range/Median
+
+  1 C         1828.9      1857.8      1880.7      1903.6    
+       2      1805.3      1942.4      3169.1      8886.8    
+       3      1828.5      1847.2      1867.8      1889.0    
+       4      8.3304      10.711      14.867      17.689    
+       5     0.45559E-02 0.57986E-02 0.79594E-02 0.93645E-02
+      44      69.396      114.73      221.01      312.91    
+      66      9.5607      12.894      25.785      39.873    
+      55     0.20756E-04 0.33623E-04 0.63352E-04 0.87694E-04
+       6      1828.3      1846.8      1867.3      1888.8    
+       7     -7.4283     -11.750     -14.967     -18.633    
+       8      9.3657      12.309      15.647      20.635    
+       9      8.3970      12.030      15.307      19.634    
+      10     0.45927E-02 0.65137E-02 0.81973E-02 0.10395E-01
+      11      1807.7      1827.4      1840.5      1856.7    
+      12      1843.2      1866.1      1896.2      1926.5    
+      13      1815.1      1830.4      1846.5      1863.5    
+      14      1841.2      1865.3      1893.4      1918.1    
+      15      1805.7      1823.7      1833.7      1848.7    
+      16      1847.9      1871.4      1901.6      1937.3    
+      17      42.208      47.729      67.808      88.621    
+      18     0.23086E-01 0.25844E-01 0.36313E-01 0.46920E-01
+
+  2 I         473.18      489.05      498.52      512.05    
+       2      469.10      487.54      531.68      911.44    
+       3      468.27      477.55      486.49      497.39    
+       4      11.233      16.083      19.836      21.346    
+       5     0.23987E-01 0.33679E-01 0.40772E-01 0.42916E-01
+      44      126.17      258.67      393.45      455.66    
+      66      17.824      33.485      46.227      66.751    
+      55     0.57538E-03 0.11343E-02 0.16624E-02 0.18418E-02
+       6      468.96      477.94      486.86      497.65    
+       7     -13.309     -18.385     -23.740     -21.193    
+       8      10.474      14.633      20.894      17.650    
+       9      11.892      16.509      22.317      19.422    
+      10     0.25357E-01 0.34541E-01 0.45839E-01 0.39027E-01
+      11      442.45      441.89      449.94      456.72    
+      12      487.32      507.04      523.96      545.56    
+      13      448.57      449.59      455.34      462.75    
+      14      485.20      504.17      519.15      538.75    
+      15      436.17      434.41      441.83      451.16    
+      16      493.54      511.13      532.66      557.01    
+      17      57.369      76.723      90.832      105.85    
+      18     0.12233     0.16053     0.18657     0.21270    
+
+  3 Y         2827.2      2854.7      2892.0      2939.5    
+       2      2799.5      2937.8      4213.6      10322.    
+       3      2821.9      2832.6      2867.1      2910.2    
+       4      17.446      23.998      31.396      34.940    
+       5     0.61824E-02 0.84720E-02 0.10950E-01 0.12006E-01
+      44      304.38      575.90      985.70      1220.8    
+      66      43.697      74.132      107.31      171.26    
+      55     0.38222E-04 0.71775E-04 0.11991E-03 0.14415E-03
+       6      2824.3      2834.1      2869.9      2909.5    
+       7     -21.014     -26.192     -37.071     -32.676    
+       8      15.632      22.303      30.293      34.139    
+       9      18.323      24.247      33.682      33.408    
+      10     0.64874E-02 0.85555E-02 0.11736E-01 0.11482E-01
+      11      2785.3      2787.1      2806.9      2850.4    
+      12      2848.6      2879.7      2920.6      2978.7    
+      13      2791.7      2792.1      2817.1      2855.4    
+      14      2845.7      2866.4      2918.1      2975.2    
+      15      2769.0      2765.9      2796.5      2828.9    
+      16      2852.8      2886.2      2929.2      3007.3    
+      17      83.823      120.22      132.73      178.35    
+      18     0.29679E-01 0.42421E-01 0.46247E-01 0.61299E-01
+@                                                                             
+@ Quit the job:                                                               
+@                                                                             
+QUIT;                                                                         
+Normal End of Job.

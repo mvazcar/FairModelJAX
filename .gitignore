@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+
+# Working dirs (created on demand by pipeline steps)
+output/*.parquet
+temp/
+raw/IS.DAT
+
+# FP.EXE scratch (re-created every run)
+raw_source/04_mc_model/mcj_extracted/TEMP*
+raw_source/04_mc_model/mcj_extracted/fort.*
+
+# Large binary data shipped by Fair. Uncomment these if you'd rather
+# download from fairmodel.econ.yale.edu than store ~45 MB of .DAT files
+# in git. Keep committed if you want a fully self-contained repo.
+#raw_source/04_mc_model/mcj_extracted/SHRDDD.DAT
+#raw_source/04_mc_model/mcj_extracted/OUT
+#raw_source/07_docs/*.pdf
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

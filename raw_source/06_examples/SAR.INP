@@ -1,0 +1,304 @@
+SARGENT'S MODEL 
+SPACE MAXCOV=55 MAXS=7 FIRSTPER=1952.1 LASTPER=1989.2 
+ MAXCOEF=30 MAXFSR=60; 
+@
+@ Load the data, which are in data set SAR.DAT.
+@
+LOADDATA FILE=SAR.DAT; 
+@
+@ Set up the model, first without the price expectations variable
+@ in equations 1 and 2.  Equations 6 and 7 are the equations for 
+@ the exogenous variables.  Agents are assumed to use these 
+@ equations to form their expectations of M and @ POP.  Note that 
+@ MAXS in the SPACE command is 7: there are 5 regular stochastic 
+@ equations in the model and 2 exogenous variable equations.  
+@
+SMPL 1952.1 1989.2; 
+CREATE CNST=1; 
+CREATE N=NF-UN+POP; 
+CREATE MACT=M; 
+CREATE POPACT=POP; 
+CREATE MMP=M-P; 
+EQ 1 UN CNST T UN(-1) UN(-2) UN(-3) UN(-4); 
+EQ 2 NF CNST T UN NF(-1) NF(-2) NF(-3) NF(-4); 
+EQ 3 Y CNST T N N(-1) N(-2) N(-3) N(-4) RHO=2; 
+EQ 4 MMP CNST T R R(-1) R(-2) R(-3) R(-4) R(-5) R(-6) R(-7) 
+ Y Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) Y(-6) Y(-7) RHO=2; 
+LHS P=M-MMP; 
+EQ 5 R CNST T R(-1) R(-2) R(-3) R(-4); 
+IDENT N=NF-UN+POP; 
+EQ 6 M CNST T M(-1) M(-2); 
+EQ 7 POP CNST T POP(-1) POP(-2); 
+EQ 1 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3) 
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3) 
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) 
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2); 
+EQ 2 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3) 
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3) 
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) 
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2); 
+EQ 3 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3) 
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3) 
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) 
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2); 
+EQ 4 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3) 
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3) 
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) 
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2); 
+EQ 5 FSR CNST T UN(-1) UN(-2) UN(-3) UN(-4) NF(-1) NF(-2) NF(-3) 
+ NF(-4) N(-1) N(-2) N(-3) N(-4) N(-5) N(-6) R R(-1) R(-2) R(-3) 
+ R(-4) R(-5) R(-6) R(-7) R(-8) R(-9) Y(-1) Y(-2) Y(-3) Y(-4) Y(-5) 
+ Y(-6) Y(-7) Y(-8) Y(-9) POP M MMP(-1) MMP(-2); 
+@
+@ Estimate the model without the expectations variables.
+@
+SMPL 1954.3 1989.2; 
+2SLS; EST 1-7; END; 
+@
+@ Add the expectations variables.  Note that 99 is used for the 
+@ lead, because the price expectations variable enters 
+@ contemporaneously.  
+@
+EQ 1 UN CNST T UN(-1) UN(-2) UN(-3) UN(-4) P P(99); 
+EQ 2 NF CNST T UN NF(-1) NF(-2) NF(-3) NF(-4) P P(99); 
+@
+@ Set initial values for the coefficients of P.
+@
+COEF; 
+7 1 -.02 
+8 2 .02 
+0 
+@ 
+@ In each equation the coefficient of P equals minus the 
+@ coefficient of P(99), so impose this constraint.
+@
+READCONSTR FILE=KEYBOARD; 
+1 1 
+2 1 
+0 
+CTC COEF(8,1)=-COEF(7,1); 
+CTC COEF(9,2)=-COEF(8,2); 
+PRINTMODEL; 
+WRITECOEF FILE=SARCOEF2.BIN; 
+@
+@ Set up the Jacobian.
+@
+JACOB DERIV(1,1)=1; 
+JACOB DERIV(4,1)=-COEF(7,1); 
+JACOB DERIV(2,2)=1; 
+JACOB DERIV(4,2)=-COEF(8,2); 
+JACOB DERIV(1,2)=-COEF(4,2); 
+JACOB DERIV(3,3)=1; 
+JACOB DERIV(6,3)=-COEF(3,3); 
+JACOB DERIV(4,4)=-1; 
+JACOB DERIV(3,4)=-COEF(11,4); 
+JACOB DERIV(5,5)=1; 
+JACOB DERIV(6,6)=1; 
+JACOB DERIV(2,6)=-1; 
+JACOB DERIV(1,6)=1; 
+@
+@ Set up the model for solution purposes.  Note that the 
+@ FILEEXOG option is used for M and POP.
+@
+SETUPSOLVE NOMSG NOMISS MAXCHECK=4 TOLALL=.00001; 
+SETUPRE FILEENDO=KEYBOARD H=0 FILEEXOG=KEYBOARD NOMSG2 
+ TOL2=.00002; 
+P 
+; 
+M 
+POP 
+; 
+SETUPFIMLRE STEPSIZEDER=.001; 
+@
+@ Estimate the model by FIML.  Note that the FILEFIXED option 
+@ is used to tell the program not to estimate equations 6 and 7.  
+@ In addition, the coefficients of equation 5 are not 
+@ estimated---see the discussion in Sections 5.4 in Fair (1984) 
+@ for why the equation is not estimated.  Some of the less 
+@ important coefficients in equations 1-4 are also not 
+@ estimated by FIML.  This is done to save on computer time.  
+@
+FIML FILEFIXED=KEYBOARD MAXITERS=20 ;
+1 5 
+1 6 
+2 5 
+2 6 
+2 7 
+3 4 
+3 5 
+3 6 
+3 7 
+3 9 
+4 4 
+4 5 
+4 6 
+4 7 
+4 8 
+4 9 
+4 10 
+4 12 
+4 13 
+4 14 
+4 15 
+4 16 
+4 17 
+4 18 
+5 1 
+5 2 
+5 3 
+5 4 
+5 5 
+5 6 
+6 1 
+6 2 
+6 3 
+6 4 
+7 1 
+7 2 
+7 3 
+7 4 
+0 
+@
+@ Estimate the COV matrix.
+@
+FIML FILEFIXED=KEYBOARD MAXITERS=0 COV;
+1 5 
+1 6 
+2 5 
+2 6 
+2 7 
+3 4 
+3 5 
+3 6 
+3 7 
+3 9 
+4 4 
+4 5 
+4 6 
+4 7 
+4 8 
+4 9 
+4 10 
+4 12 
+4 13 
+4 14 
+4 15 
+4 16 
+4 17 
+4 18 
+5 1 
+5 2 
+5 3 
+5 4 
+5 5 
+5 6 
+6 1 
+6 2 
+6 3 
+6 4 
+7 1 
+7 2 
+7 3 
+7 4 
+0 
+PRINTCOV DIAG;
+@
+@ Check out the CHEAP option
+@
+FIML FILEFIXED=KEYBOARD MAXITERS=20 
+ RECHEAP REMAXITERS=5 FILEDERWRITE=SARDER.BIN REDER=1 ;
+1 5 
+1 6 
+2 5 
+2 6 
+2 7 
+3 4 
+3 5 
+3 6 
+3 7 
+3 9 
+4 4 
+4 5 
+4 6 
+4 7 
+4 8 
+4 9 
+4 10 
+4 12 
+4 13 
+4 14 
+4 15 
+4 16 
+4 17 
+4 18 
+5 1 
+5 2 
+5 3 
+5 4 
+5 5 
+5 6 
+6 1 
+6 2 
+6 3 
+6 4 
+7 1 
+7 2 
+7 3 
+7 4 
+0 
+@
+@ Check the final value of the likelihood function obtained 
+@ using the less expensive method.
+@
+FIML MAXITERS=0 ; 
+@
+@ Estimate the COV matrix using the CHEAP option: (this did 
+@  give the correct t-statistics, so in this case the 
+@  CHEAP option did not work)
+@
+FIML FILEFIXED=KEYBOARD MAXITERS=0 COV
+ RECHEAP REMAXITERS=0 REDER=0 FILEDERREAD=SARDER.BIN ;
+1 5 
+1 6 
+2 5 
+2 6 
+2 7 
+3 4 
+3 5 
+3 6 
+3 7 
+3 9 
+4 4 
+4 5 
+4 6 
+4 7 
+4 8 
+4 9 
+4 10 
+4 12 
+4 13 
+4 14 
+4 15 
+4 16 
+4 17 
+4 18 
+5 1 
+5 2 
+5 3 
+5 4 
+5 5 
+5 6 
+6 1 
+6 2 
+6 3 
+6 4 
+7 1 
+7 2 
+7 3 
+7 4 
+0 
+PRINTCOV DIAG;
+@
+@ Exit the job.
+@
+QUIT; 

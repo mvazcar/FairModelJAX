@@ -1,0 +1,153 @@
+ISRE MODEL FOR FP PROGRAM  NOVEMBER 11, 2013
+SPACE MAXVAR=200 MAXS=2 MAXCOEF=20  MAXFSR=30 FIRSTPER=1952.1 
+ LASTPER=2013.3 MAXCOV=9;
+@
+@ For solution, do at least 2 iterations:
+@
+SETUPSOLVE MINITERS=2 ;
+@
+@ No missing values in IS MODEL:
+@
+SETUPSOLVE NOMISS;
+@
+@ Do not print iteration numbers:
+@
+SETUPSOLVE NOMSG;
+@
+@ For estimation divide by T rather than T-K:
+@
+SETUPEST DIVIDET;
+@
+@ Use (6.13) and (6.14), p. 212, in Fair (1984) to compute the 
+@ 2SLS estimates:
+@
+SETUPEST ALT2SLS;
+@
+@ Set up some options for the DFP algorithm:
+@
+SETUPDFP PRINTOBJ PRINTVALUES;
+@
+@ Load the data:
+@
+SMPL 1952.1 2013.3;
+LOADDATA FILE=IS.DAT;
+@ 
+@ Create the constant term:
+@
+CREATE CNST=1;
+@
+@ Generate the needed variables:
+@
+GENR LOGC=LOG(C);
+GENR LOGI=LOG(I);
+GENR LOGY=LOG(Y);
+@
+@ Create variables needed only for FSRs:
+@
+CREATE LOGG=LOG(G);
+@
+@ Specify the equations and the LHS commands:
+@
+EQ 1 LOGC CNST LOGC(-1) LOGY(2) R RHO=1;
+LHS C=EXP(LOGC);
+EQ 2 LOGI CNST LOGI(-1) LOGY(1) R(-1);
+LHS I=EXP(LOGI);
+IDENT Y=C+I+G;
+@
+@ Specify the FSRs for each equation:
+@
+EQ 1 FSR CNST LOGC(-1) LOGC(-2) LOGY(-1) R(-1) LOGI(-1) LOGG 
+;
+EQ 2 FSR CNST LOGC(-1) LOGC(-2) LOGY(-1) R(-1) LOGI(-1) LOGG
+;
+@
+@ Check the IDENT and LHS commands:
+@
+SMPL 2013.1 2013.1;
+CHECK IDENT;
+CHECK LHS;
+@
+@ Estimate the coefficients using Hansen's method and save them:
+@
+SMPL 1954.1 1998.4;
+2SLS FILECOEF=ISRECOE2.BIN ;
+EST 1 HANSEN MA=1;
+EST 2 HANSEN;
+END;
+@
+@ Print the model for checking purposes:
+@
+PRINTMODEL;
+@
+@ Set up the Jacobian for FIML:
+@
+JACOB DERIV(1,1)= 1/C; 
+JACOB DERIV(2,2)= 1/I; 
+JACOB DERIV(3,3)= 1; 
+JACOB DERIV(1,3)= -1;
+JACOB DERIV(2,3)= -1;
+@
+@ Set up RE options.  Note that KFIRST=KLAST, which save time.
+@
+@ ALTRHO=4
+SETUPRE FILEENDO=KEYBOARD H=2 KFIRST=10 KLAST=10 
+ NOMSG2 NOMSG3 NOMSGLIMIT3 MAXITERS2=25 TOL2=.00002 TOL3=.00003 
+ TOL4=.00004
+ JFIRST=6 JLAST=6
+;
+LOGY
+;
+SETUPFIMLRE STEPSIZEDER=.001;
+SETUPFIMLCOV MINCHANGE=.00000000001;
+@
+@ Estimate the model by FIML using the derivative (cheap) method:
+@
+FIML RECHEAP REMAXITERS=2 FILEDERWRITE=ISREDER.BIN 
+ FILEYEWRITE=ISREYE.BIN MAXITERS=30 REDER=0;
+@
+@ Estimate the COV matrix:
+@
+FIML RECHEAP FILEDERREAD=ISREDER.BIN MAXITERS=0 COV ;
+@
+@ Print COV, S, and the model:
+@
+PRINTCOV;
+PRINTS;
+PRINTCOV DIAG;
+@
+@ Estimate the model by FIML regular way:
+@
+FIML MAXITERS=30;
+@
+@ Estimate the COV matrix:
+@
+FIML MAXITERS=0 COV ;
+@
+@ Print COV, S, and the model:
+@
+PRINTCOV;
+PRINTS;
+PRINTCOV DIAG;
+@
+@ Solve the model:
+@
+SMPL 1998.1 1998.4;
+RMSE DYNAMIC FILEVAR=IS.VAR;
+@
+@ Do stochastic simulation:
+@
+SMPL 1998.1 1998.4;
+STOSIM NTRIALS=100 FILEVAR=IS.VAR FILEMEDIAN=KEYBOARD DRAWCOEF;
+C
+I
+Y
+;
+STOSIM NTRIALS=100 FILEVAR=IS.VAR FILEMEDIAN=KEYBOARD ;
+C
+I
+Y
+;
+@
+@ Quit the job:
+@
+QUIT;

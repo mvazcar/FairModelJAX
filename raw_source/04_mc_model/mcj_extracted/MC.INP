@@ -1,0 +1,3778 @@
+MC                                                                            
+SPACE FIRSTPER=1952.1 LASTPER=2025.4 MAXVAR=18260 MAXS=2116 MAXFSR=60         
+   NOSMATRIX;                                              
+@
+@ The following four SETLA commands should always be used.                    
+@ LA(344)=1 tells the FP program that the overall MC model is to be solved.   
+@ LA(350)=1 tells the program to continue the solution even if an error is    
+@ found for a particular country.                                             
+@ Both LA(344) and LA(350) should always be set to 1 when working with        
+@ the MC model.                                                               
+@ LA(357) and LA(358) set the number of iterations to perform.                
+@                                                                             
+SETLA 344 1;                                                                  
+SETLA 350 1;                                                                  
+SETLA 357 10;                                                                 
+SETLA 358 10;                                                                 
+@                                                                             
+@ LA(349)=3 means do nothing in SOLK (used for distribution).                 
+@ LA(349) should always be set to 3.                                          
+@                                                                             
+SETLA 349 3;                                                                  
+@                                                                             
+@ Setup commands:                                                             
+@                                                                             
+SETUPEST ALT2SLS;                                                             
+SETUPSOLVE NOMSG; 
+SETLA 118 1;
+@                                                                             
+@ Read in all the data                                                        
+@                                                                             
+SMPL 1952.1 2017.4;
+LOADDATA FILE=YAW.DAT;
+SMPL 1960.1 2017.4;
+LOADDATA FILE=YDATA.DAT;
+@ Change COG to COGG in YDATA.DAT and below
+@ Change THG to THGG in YDATA.DAT and below
+@ Change DELH to DELHH below
+LOADDATA FILE=QUAR.DAT;
+SMPL 1952.1 2017.4;
+CREATE C=1; 
+CREATE ZERO=0;
+CREATE EU1=0; 
+CREATE EU2=0;
+SMPL 1999.1 2017.4;
+CREATE EU1=1;
+SMPL 2001.1 2017.4;
+CREATE EU2=1;
+@
+SMPL 1960.1 2017.4;
+CREATE USPSI1=(USM10$/1000)/IM;
+CREATE USPSI2=(USX10$/1000)/EX;
+CREATE USPSI3=PIM/USPMP;
+CREATE DELT1=PEX/USPX$;
+GENR USM10$=1000*USPSI1*IM;
+@
+@ These three out when US alone, where PEX=PSI1*PX
+@GENR PEX=PSI1*PX;
+@
+@ SPECIAL MCCRI2 WHEN EX EXPERIMENT
+@ IDENT EX=(USX00$+USXS+USEXDS)/1000;                                         
+@CREATE USXS=1000*(.1259*YS)-USX00$-USEXDS;
+@GENR EX=(USX00$+USXS+USEXDS)/1000;                                         
+@ END SPECIAL MCCRI2
+@
+GENR EX=(USX10$/1000)/USPSI2;
+GENR PIM=USPSI3*USPMP;
+GENR PEX=DELT1*USPX$;
+@
+SMPL 1960.1 2017.4;
+GENR GERSA=(GERS+GERS(1)+GERS(2)+GERS(3))/4;                        
+GENR GEPYA=(GEPY+GEPY(1)+GEPY(2)+GEPY(3))/4;                        
+GENR GEEA=(GEE+GEE(1)+GEE(2)+GEE(3))/4;                             
+GENR EURSA=(EURS+EURS(1)+EURS(2)+EURS(3))/4;                        
+GENR EURBA=(EURB+EURB(1)+EURB(2)+EURB(3))/4;                        
+GENR USRSA=(RS+RS(1)+RS(2)+RS(3))/4;                                  
+GENR USPYA=(GDPD+GDPD(1)+GDPD(2)+GDPD(3))/4;                                  
+GENR USPY=GDPD;
+GENR USRS=RS;
+@
+@ US BEGIN
+@
+SMPL 1952.1 2017.4;
+CREATE CNST2=1;
+CREATE TB=1;
+GENR CSZ=CS/POP   ;
+GENR CNZ=CN/POP   ;
+GENR CDZ=CD/POP   ;
+GENR IHHZ=IHH/POP ;
+GENR L1Z=L1/POP1  ;
+GENR L2Z=L2/POP2  ;
+GENR L3Z=L3/POP3  ;
+GENR LL1Z=LOG(L1Z);
+GENR LL2Z=LOG(L2Z);
+GENR LL3Z=LOG(L3Z);
+GENR LMZ=LM/POP   ;
+GENR LLMZ=LOG(LMZ);
+GENR LPF=LOG(PF)       ;
+GENR LJF1=LOG(JF/JF(-1)) ;
+GENR LHF1=LOG(HF/HF(-1)) ;
+GENR LHFL1A=LOG(HF(-1)/HFS(-1));
+GENR LHO=LOG(HO)         ;
+GENR LWF=LOG(WF)         ;
+GENR LWFQ=LOG(WF)-LOG(LAM);
+GENR LMFZ=LOG(MF/PF)     ;
+GENR LY1=LOG(Y/Y(-1))    ;
+GENR LHF=LOG(HF)         ;
+GENR LXMFAZ=LOG((X-FA)/POP)      ;
+GENR RB1=RB-RB(-1)       ;
+GENR RS1=RS-RS(-1);
+GENR LCURZ=LOG(CUR/(POP*PF)) ;
+GENR IMZ=IM/POP          ;
+GENR LUB=LOG(UB);
+@         
+@ SPECIAL MCNEWE, MCPROG (02) CHANGED CG
+@ SPECIAL MCPOST (for some), MCCRIS, MCCRI2 CHANGED CGZ
+@
+@ IF CGZ IS CHANGED, THEN CHANGE THE FOLLOWING GENR TO CREATE
+@CREATE CGZ=CG/(PX(-1)*YS(-1)); 
+@ THE FOLLOWING IS THE NORMAL MC
+GENR CGZ=CG/(PX(-1)*YS(-1)); 
+GENR GAP=(YS-Y)/YS;
+GENR GAPA=(YS-Y)/YS+.04;
+GENR GAPAM=(ABS(GAPA-.00001)+GAPA-.00001)/2+.00001;
+GENR LGAPA=LOG(GAPAM);
+GENR XMFAZ=(X-FA)/POP            ;
+GENR LXMFA=LOG(X-FA)           ;
+GENR UMM=(ABS(U-1.0)+U-1.0)/2 + 1.0;
+GENR LU=LOG(UMM);
+GENR LWFD5=LOG(WF*(1+D5G)) - LOG(LAM);
+GENR PCM1L1A=D794823*PCM1(-1) ;
+GENR LMFL1Q=LOG(MF(-1)/PF)           ;
+GENR LCURL1Q=LOG(CUR(-1)/(POP(-1)*PF)) ;
+GENR LEXL=LOG(JF/(JHMIN/HFS))   ;
+GENR LY=LOG(Y)            ;
+GENR LYZ=LOG(Y/POP);
+GENR YDZ=YD/(POP*PH)      ;
+GENR AA2Z=AA2/POP; 
+GENR AAZ=AA/POP           ;
+GENR YNLZ=YNL/(POP*PH);
+GENR LYNLZ=LOG(YNLZ);
+GENR KHZ=KH/POP           ;
+GENR KDZ=KD/POP;
+GENR LPIM=LOG(PIM)        ;
+GENR LPIMZ=LOG(PIM/PF);
+GENR LYDZ=LOG(YD/(POP*PH)) ;
+GENR RSB=RS*(1-D2G-D2S)    ;
+GENR EXKK=KK-KKMIN         ;
+GENR RBA=RB*(1-D2G-D2S)        ;
+GENR PCPD=100*((PD/PD(-1))**4-1) ;
+GENR PCPD4=100*(PD/PD(-4)-1);
+GENR PCPD8=100*((PD/PD(-8))**.5-1);
+GENR RBA4=RBA-PCPD4;
+GENR Y1=Y-Y(-1)            ;
+GENR COGS=COG+COS         ;
+GENR LCOGSZ=LOG(COGS/POP)       ;
+GENR JHGSZ=(JG*HG+JM*HM+JS*HS)/POP ;
+GENR LJHGSZ=LOG(JHGSZ)              ;
+GENR TRGSZ=(TRGH+TRSH)/(POP*PH) ;
+GENR LTRGSZ=LOG(TRGSZ)         ;
+GENR ODHM=1-D1GM-D1SM-D4G  ;
+GENR LODHM=LOG(ODHM)           ;
+GENR EXL=JF-JHMIN/HFS             ;
+GENR LEX=LOG(EX)               ;
+GENR LEXZ=LOG(EX/POP);
+GENR TFGS=TFG+TFS              ;
+GENR LCSZ=LOG(CSZ)             ;
+GENR LAAZ=LOG(AAZ)             ;
+GENR LCNZ=LOG(CNZ)             ;
+GENR LCNZ1=LCNZ-LCNZ(-1);
+GENR LCDZ=LOG(CDZ)             ;
+GENR LKHZ=LOG(KHZ)             ;
+GENR LIHHZ=LOG(IHHZ)           ;
+GENR LV=LOG(V)                 ;
+GENR LVZ=LOG(V/X);
+GENR LEXKK=LOG(KK/KKMIN)       ;
+GENR LIMZ=LOG(IMZ)             ;
+GENR LXXXZ=LOG((CS+CN+CD+IHH+IKF+IKH+IKB+IHF+IHB)/POP);
+GENR WAZPH=WA/PH;
+GENR LWAZPH=LOG(WAZPH);
+GENR LKDZ=LOG(KDZ);
+GENR LDF=LOG(DF);
+GENR LDF1=LOG(DF/DF(-1));
+GENR LPFZPIM=LOG(PF/PIM);
+GENR LWFZPF=LWF-LPF;
+GENR LWFQZPF=LWFQ-LPF;
+GENR RBMRSL2=RB-RS(-2);
+GENR RSMRSL2=RS-RS(-2);
+GENR RSLMRSL2=RS(-1)-RS(-2);
+GENR RMMRSL2=RM-RS(-2);
+GENR RBLMRSL2=RB(-1)-RS(-2);
+GENR RMLMRSL2=RM(-1)-RS(-2);
+GENR RMACDZ=RMA*.01*T;
+GENR RMALIHHZ=RMA(-1)*.002*T;
+GENR LKK=LOG(KK);
+GENR LPH=LOG(PH);
+GENR UR1=UR-UR(-1);
+GENR PIEFA=PIEF-TFG-TFS-TFR  ;
+GENR PIEFAMM=(ABS(PIEFA-4.)+PIEFA-4.)/2+4.;
+GENR LPIEFAZ=LOG(PIEFAMM/DF(-1));
+GENR TPIEM=PIEF-TFG-TFS-TFR;
+GENR TPIEM1=TPIEM-TPIEM(-1);
+GENR TPIEM1Z=TPIEM1/(PX(-1)*YS(-1));
+GENR AAF=-AF;
+GENR AAG=-AG;
+GENR INTFZ=INTF/AAF;
+GENR INTGZ=INTG/AAG;
+GENR RQF=(.4*(RS/400)+.6*(1/8)*(1/400)*(RB
+ +RB(-1)+RB(-2)+RB(-3)+RB(-4)+RB(-5)+RB(-6)+RB(-7)));
+GENR RQG=(.4*(RS/400)+.75*.6*(1/8)*(1/400)*(RB
+ +RB(-1)+RB(-2)+RB(-3)+RB(-4)+RB(-5)+RB(-6)+RB(-7)));
+GENR LX=LOG(X);
+GENR CGZ3=(CG+CG(-1)+CG(-2))/(PX*YS+PX(-1)*YS(-1)+PX(-2)*YS(-2));
+GENR LKK1=LKK-LKK(-1);
+GENR DKDZCDL1=(DELD*KD(-1)-CD(-1))/POP(-1);
+GENR CDZ1=CDZ-CDZ(-1);
+GENR DKHZIHL1=(DELH*KH(-1)-IHH(-1))/POP(-1);
+GENR IHHZ1=IHHZ-IHHZ(-1);
+@
+EQ 1 LCSZ CNST2 C AG1 AG2 AG3 LCSZ(-1) LYDZ RSA LAAZ(-1) RHO=1;
+LHS CS=EXP(LCSZ)*POP;
+EQ 2 LCNZ C AG1 AG2 AG3 LCNZ(-1) LAAZ(-1) LYDZ RMA ;
+LHS CN=EXP(LCNZ)*POP;
+EQ 3 CDZ1 CNST2 C AG1 AG2 AG3 DKDZCDL1 KDZ(-1) YDZ RMACDZ AAZ(-1) ;
+LHS CD=(CDZ1+CD(-1)/POP(-1))*POP;
+EQ 4 IHHZ1 C AG1 AG2 AG3 DKHZIHL1 KHZ(-1) YDZ RMALIHHZ AA2Z(-1) RHO=1;
+LHS IHH=(IHHZ1+IHH(-1)/POP(-1))*POP;
+EQ 5 LL1Z C LL1Z(-1) LAAZ(-1) UR ;
+LHS L1=EXP(LL1Z)*POP1;
+EQ 6 LL2Z CNST2 C TB T LL2Z(-1) LAAZ(-1) UR ;
+LHS L2=EXP(LL2Z)*POP2;
+EQ 7 LL3Z C LL3Z(-1) LWAZPH LAAZ(-1) UR;
+LHS L3=EXP(LL3Z)*POP3;
+EQ 8 LLMZ C LLMZ(-1) UR ;
+LHS LM=EXP(LLMZ)*POP;
+EQ 9 NONE9 C;
+EQ 10 LPF LPF(-1) LWFD5 CNST2 TB C T LPIM UR ;
+LHS PF=EXP(LPF);
+EQ 11 LY C LY(-1) LX LV(-1) D593 D594 D601 RHO=3;
+LHS Y=EXP(LY);
+EQ 12 LKK1 CNST2 C LEXKK(-1) LKK1(-1) LY1 LY1(-1) LY1(-2) LY1(-3) LY1(-4) 
+ RBA4(-2) CGZ3(-2) ;
+LHS KK=EXP(LKK1)*KK(-1);
+EQ 13 LJF1 C LEXL(-1) LJF1(-1) LY1 D593 ;
+LHS JF=EXP(LJF1)*JF(-1);
+EQ 14 LHF1 C LHFL1A LEXL(-1) LY1 T ;
+LHS HF=EXP(LHF1)*HF(-1);
+EQ 15 LHO C HFF HFF(-1) RHO=1;
+LHS HO=EXP(LHO);
+EQ 17 LMFZ C LMFL1Q LXMFA  RSB ;
+LHS MF=EXP(LMFZ)*PF;
+EQ 18 LDF1 LPIEFAZ ; 
+LHS DF=EXP(LDF1)*DF(-1);
+EQ 19 NONE19 C;
+EQ 20 NONE20 C;
+EQ 21 NONE21 C;
+EQ 22 NONE22 C;
+EQ 23 RBMRSL2 C RBLMRSL2 RSMRSL2 RSLMRSL2 RHO=1;
+LHS RB=RBMRSL2+RS(-2); 
+EQ 24 RMMRSL2 C RMLMRSL2 RSMRSL2 RSLMRSL2;
+LHS RM=RMMRSL2+RS(-2);
+EQ 25 CGZ C RB1 TPIEM1Z;
+@ SPECIAL IF CG IS CHANGED, DON'T DO THE FOLLOWING.  MCNEWE, MCPROG (02) 
+LHS CG=CGZ*PX(-1)*YS(-1);                                                     
+EQ 26 LCURZ C LCURL1Q LXMFAZ RSA ;
+LHS CUR=EXP(LCURZ)*(POP*PF);
+EQ 27 LIMZ C AG1 AG2 AG3 LIMZ(-1) LYZ LAAZ(-1) LPFZPIM T 
+D691 D692 D714 D721 RHO=0; 
+LHS IM=EXP(LIMZ)*POP;
+EQ 28 LUB C LUB(-1) LU LWF RHO=1;
+LHS UB=EXP(LUB);
+EQ 29 INTGZ C INTGZ(-1) RQG ;
+@
+@ SPECIAL FOR MCMPLE
+@
+LHS INTG=(INTGZ)*AAG*1.0;
+EQ 30 RS C RS(-1) PCPD UR UR1 PCM1(-1) PCM1L1A RS1(-1) RS1(-2) ;
+LHS RS=(ABS(RS-.0)+RS-.0)/2.+.0;
+@
+@ Beginning with equation 31
+@
+IDENT PX=(PF*(X-FA)+PFA*FA)/X;
+@ MC SPECIAL
+@IDENT PEX=PSI1*PX            ;
+IDENT PD=(PX*X-PEX*EX+PIM*IM)/(X-EX+IM);
+IDENT PH=(PCS*CS+PCN*CN+PCD*CD+PIH*IHH+IBTG+IBTS)/(CS+CN+CD+IHH);
+IDENT PCS=PSI2*(1+D3G+D3S)*PD                                   ;
+IDENT PCN=PSI3*(1+D3G+D3S)*PD                                   ;
+IDENT PCD=PSI4*(1+D3G+D3S)*PD                                   ;
+IDENT PIH=PSI5*PD                                               ;
+IDENT PIK=PSI6*PD                                               ;
+IDENT PG=PSI7*PD                                                ;
+IDENT PS=PSI8*PD                                                ;
+IDENT PIV=PSI9*PD                                               ;
+IDENT WH=100*((WF*JF*(HN+1.5*HO)+WG*JG*HG+WM*JM*HM+WS*JS*HS)/
+(JF*(HN+1.5*HO)+JG*HG+JM*HM+JS*HS))                             ;
+IDENT WG=PSI10*WF                                               ;
+IDENT WM=PSI11*WF                                               ;
+IDENT WS=PSI12*WF                                               ;
+IDENT THG=(D1G+((TAUG*YT)/(POP*PH)))*YT                              ;
+IDENT THS=(D1S+((TAUS*YT)/(POP*PH)))*YT                              ;
+IDENT TFG=D2G*(PIEF-TFS)                                        ;
+IDENT TFS=D2S*PIEF                                              ;
+IDENT IBTG=(D3G/(1+D3G))*(PCS*CS+PCN*CN+PCD*CD-IBTS)            ;
+IDENT IBTS=(D3S/(1+D3S))*(PCS*CS+PCN*CN+PCD*CD-IBTG)            ;
+IDENT SIHG=D4G*(WF*JF*(HN+1.5*HO))               ;
+IDENT SIFG=D5G*(WF*JF*(HN+1.5*HO))                    ;
+IDENT PKH=PSI14*PD;
+IDENT INTGR=PSI15*INTG;
+IDENT USROW=-INTGR+DR+PIEFRET+USOTHER;
+IDENT KD=(1-DELD)*KD(-1)+CD                                     ;
+IDENT KH=(1-DELH)*KH(-1)+IHH                                    ;
+IDENT X=CS+CN+CD+IHH+IKF+EX-IM+COG+COS+IKH+IKB+IKG+IHF+IHB;
+IDENT XX=PCS*CS+PCN*CN+PCD*CD+PIH*(IHB+IHF+IHH)+PIK*(IKH+IKG+IKB+IKF)
+ +PEX*EX-PIM*IM+PG*COG+PS*COS-IBTG-IBTS;
+IDENT HN=HF-HO                                                  ;
+IDENT V=V(-1)+Y-X ;
+IDENT YT=WF*JF*(HN+1.5*HO)+WG*JG*HG+WM*JM*HM+WS*JS*HS
++RNT+INTZ+INTF+INTG-INTGR+INTS+DF+DB+DR+DG+DS+TRFH-TRHR-SIGG-SISS;
+IDENT SH=YT-SIHG-SIHS+USAFF-THG-THS
+-PCS*CS-PCN*CN-PCD*CD+TRGH+TRSH+UB
++INS+NICD+CCH-CTH-PIH*IHH-CDH-PIK*IKH-NNH;
+IDENT AH=AH(-1)+SH-MH+MH(-1)+CG-DISH                            ;
+IDENT CCF1=D6G*(PIK*IKF+PIK(-1)*IKF(-1)+PIK(-2)*IKF(-2)+PIK(-3)*IKF(-3))/4.;
+IDENT PIEF=XX+PIV*IVF+SUBS+SUBG+USOTHER
+-WF*JF*(HN+1.5*HO)-RNT-INTZ-INTF-TRFH-NICD-CCH+CDH
+-TBS-TRFS-CCS-TRFR-DB-GSB-CTGB
+-GSMA-GSCA-TBG-TRFG-CCG
+-SIFG-SIFS
+-GSNN-IVA-CCF1-STAT
+;
+IDENT SF=XX+SUBS+SUBG+USOTHER+PIEFRET
+-WF*JF*(HN+1.5*HO)-RNT-INTZ-INTF-TRFH-NICD-CCH+CDH
+-TBS-TRFS-CCS
+-TRFR
+-DB-GSB-CTGB
+-GSMA-GSCA-TBG-TRFG-CCG
+-SIFG-SIFS
+-STAT
+-DF-TF1
+-PIK*IKF-PIH*IHF-NNF-CTF1-CTNN
+;
+IDENT AF=AF(-1)+SF-MF+MF(-1) -DISF;
+IDENT MB=MB(-1) -MH+MH(-1) -MF+MF(-1) -MR+MR(-1) -MG+MG(-1) -MS+MS(-1)
+ +CUR-CUR(-1);
+IDENT SB=GSB-CTB-PIH*IHB-PIK*IKB;
+IDENT AB=AB(-1)+SB-MB+MB(-1) -(BR-BO)+(BR(-1) -BO(-1)) -DISB ;
+IDENT SR=-PEX*EX-USROW+PIM*IM+TFR+TRFR+TRHR+TRGR-USAFF-CTR-NNR-TRRS;
+IDENT AR=AR(-1)+SR-MR+MR(-1)+Q-Q(-1) -DISR                     ;
+IDENT SG=GSMA+GSCA+THG+IBTG+TBG+TFG+SIHG+SIFG-DG+TRFG
+-PG*COG-WG*JG*HG-WM*JM*HM
+-TRGH-TRGR-TRGS-INTG-SUBG
++CCG-INS-USAFF-CTGMB-NNG-PIK*IKG+SIGG;
+IDENT AG=AG(-1)+SG-MG+MG(-1)+CUR-CUR(-1)+(BR-BO) -(BR(-1) -BO(-1))
+ -Q+Q(-1) -DISG ;
+IDENT SS=THS+IBTS+TBS+TFS+SIHS+SIFS-DS+TRGS+TRFS
+-PS*COS-WS*JS*HS
+-TRSH-UB-INTS-SUBS
++CCS-CTS-NNS+SISS+TRRS;
+IDENT AS=AS(-1)+SS-MS+MS(-1) -DISS                               ;
+IDENT TESTZERO=SH+SF+SB+SR+SG+SS+STAT+USAFF;
+IDENT M1=M1(-1)+MH-MH(-1)+MF-MF(-1)+MR-MR(-1)+MS-MS(-1)+MDIF    ;
+IDENT GDP=XX+PIV*(V-V(-1))+IBTG+IBTS+WG*JG*HG+WM*JM*HM+WS*JS*HS;
+IDENT GDPR=Y+PSI13*(JG*HG+JM*HM+JS*HS) +STATP      ;
+IDENT GDPD=GDP/GDPR                                             ;
+IDENT E=JF+JG+JM+JS-LM                                          ;
+IDENT U=L1+L2+L3-E                                              ;
+IDENT UR=U/(L1+L2+L3-JM)                                        ;
+IDENT AA1=(AH+MH)/PH;
+IDENT AA2=(KH*PKH)/PH ;
+IDENT D1GM=D1G+(2*TAUG*YT)/(POP*PH)                                  ;
+IDENT D1SM=D1S+(2*TAUS*YT)/(POP*PH)                                  ;
+IDENT IKF=KK-(1-DELK)*KK(-1);
+IDENT KKMIN=Y/MUH                                               ;
+IDENT JHMIN=Y/LAM                                               ;
+IDENT CDH=THETA2*PCD*CD;
+IDENT NICD=THETA3*PCD*CD;
+IDENT YNL=RNT+INTZ+INTF+INTG-INTGR+INTS+DF+DB+DR+DG+DS+TRFH+TRGH+TRSH+UB;
+IDENT HFF=HF-HFS                                           ;
+IDENT TF1=TFG+TFS+TFR;
+IDENT TCG=TFG+TBG                                           ;
+IDENT SIG=SIHG+SIFG+SIGG                                        ;
+IDENT PUG=PG*COG+WG*JG*HG+WM*JM*HM;
+IDENT RECG=THG+TCG+IBTG+SIG+TRFG-DG;
+IDENT EXPG=PUG+TRGH+TRGR+TRGS+INTG+SUBG-IGZ               ;
+IDENT SGP=RECG-EXPG                                             ;
+IDENT TCS=TFS+TBS                                               ;
+IDENT SIS=SIHS+SIFS+SISS                                        ;
+IDENT PUS=PS*COS+WS*JS*HS;
+IDENT PFA=THETA1*GDPD;
+IDENT RECS=THS+TCS+IBTS+SIS+TRGS+TRFS-DS;
+IDENT EXPS=PUS+TRSH+UB+INTS+SUBS-ISZ                    ;
+IDENT SSP=RECS-EXPS                                             ;
+IDENT YD=WF*JF*(HN+1.5*HO)+WG*JG*HG+WM*JM*HM+WS*JS*HS
++RNT+INTZ+INTF+INTG-INTGR+INTS+DF+DB+DR+DG+DS
+ +TRFH+TRGH+TRSH+UB
+-SIHG-SIHS
++USAFF-THG-THS-TRHR-SIGG-SISS;
+IDENT SRZ=(YD-PCS*CS-PCN*CN-PCD*CD)/YD                          ;
+IDENT IVF=V-V(-1)                                               ;
+IDENT PROD=Y/(JF*HF)                                            ;
+IDENT WR=WF/PF                                                  ;
+IDENT POP=POP1+POP2+POP3                                        ;
+IDENT SHRPIE=((1-D2G-D2S)*PIEF)/(WF*JF*(HN+1.5*HO))             ;
+IDENT PCGDPR=100*((GDPR/GDPR(-1))**4-1)                          ;
+IDENT PCGDPD=100*((GDPD/GDPD(-1))**4-1)                          ;
+IDENT PCM1=100*((M1/M1(-1))**4-1)                                ;
+IDENT UBR=BR-BO                                                 ;
+IDENT WA=100*((1-D1GM-D1SM-D4G)*WF*JF*(HN+1.5*HO)+
+(1-D1GM-D1SM)*(WG*JG*HG+WM*JM*HM+WS*JS*HS-SIGG-SISS))/(JF*(HN
+       +1.5*HO)+JG*HG+JM*HM+JS*HS);
+IDENT RSA=RS*(1-D1GM-D1SM)                                      ;
+IDENT RMA=RM*(1-D1GM-D1SM)                                      ;
+IDENT GNP=GDP+USROW;
+IDENT GNPR=GDPR+USROW/GDPD;
+IDENT GNPD=GNP/GNPR;
+IDENT PIEFRET=THETA4*PIEF;
+IDENT AA=AA1+AA2;
+@
+@ Begin new variables
+@
+GENR CCG=CCGQ*GDPD;
+GENR CCH=CCHQ*GDPD;
+GENR CCS=CCSQ*GDPD;
+GENR DB=DBQ*GDPD;
+GENR DR=DRQ*GDPD;
+GENR GSB=GSBQ*GDPD;
+GENR GSNN=GSNNQ*GDPD;
+GENR IGZ=IGZQ*GDPD;
+GENR INTZ=INTZQ*GDPD;
+GENR ISZ=ISZQ*GDPD;
+GENR MG=MGQ*GDPD;
+GENR MH=MHQ*GDPD;
+GENR MR=MRQ*GDPD;
+GENR MS=MSQ*GDPD;
+GENR Q=QQ*GDPD;
+GENR RNT=RNTQ*GDPD;
+GENR TBG=TBGQ*GDPD;
+GENR TRGH=TRGHQ*GDPD;
+GENR TRGS=TRGSQ*GDPD;
+GENR TRSH=TRSHQ*GDPD;
+GENR RECGZGDP=RECG/GDP;
+GENR EXPGZGDP=EXPG/GDP;
+GENR SGPZGDP=-SGP/GDP;
+GENR AGZGDP=-AG/(4*GDP);
+GENR INTGZGDP=INTG/GDP;
+GENR SRZGDP=SR/GDP;
+GENR ASZGDP=-AS/(4*GDP);
+GENR PCGDPR4=100*((GDPR/GDPR(-4))**1-1)    ;
+GENR PCGDPD4=100*((GDPD/GDPD(-4))**1-1)    ;
+@
+@ End new variables
+@
+@ Read first stage regressor information
+@
+EQ 1 FSR CNST2 C AG1 AG2 AG3 LCSZ(-1) LAAZ(-1) LYDZ(-1) RSA(-1) 
+ CNST2(-1) AG1(-1) AG2(-1) AG3(-1) LAAZ(-2) LCSZ(-2) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ LPOP 
+ LPOP(-1)
+;
+EQ 2 
+FSR C AG1 AG2 AG3 LCNZ(-1) LAAZ(-1) LYDZ(-1) RMA(-1) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 3 FSR CNST2 C AG1 AG2 AG3 KDZ(-1) AAZ(-1) YDZ(-1) RMACDZ(-1)
+ DKDZCDL1
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ T
+;
+EQ 4 FSR C KHZ(-1) RMALIHHZ YDZ(-1) 
+ AG1 AG2 AG3
+ AG1(-1) AG2(-1) AG3(-1)
+ KHZ(-2) RMALIHHZ(-1) 
+ DKHZIHL1 DKHZIHL1(-1) IHHZ1(-1)  AA2Z(-1) AA2Z(-2) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ T
+;
+EQ 5 FSR C LL1Z(-1) LAAZ(-1) UR(-1)
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 6 FSR C CNST2 T TB LL2Z(-1) LAAZ(-1) UR(-1) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 7 FSR C LL3Z(-1) LAAZ(-1) LWAZPH(-1) UR(-1)
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 8 FSR C LLMZ(-1) UR(-1) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 10 FSR LPF(-1) LWFD5(-1) CNST2 TB C T LPIM(-1) UR(-1) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 11 FSR C LY(-1) LV(-1) LY(-2) LY(-3) LY(-4) LV(-2) LV(-3) LV(-4) 
+ D593 D594 D601 D601(-1) D601(-2) D601(-3) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 12 FSR CNST2 C LKK(-1) LKK(-2) LY(-1) LY(-2) LY(-3) LY(-4) LY(-5) 
+ RBA4(-2) CGZ3(-2) LEXKK(-1)
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 13 FSR C LEXL(-1) LJF1(-1) LY1(-1) D593
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 14 FSR C LHFL1A LEXL(-1) LY1(-1) T
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 17 FSR C LMFZ(-1) LXMFA(-1) RSB(-1) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 18 FSR LPIEFAZ(-1) C
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 23 FSR C RB(-1) RB(-2) RS(-1) RS(-2) RS(-3) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ PCPD(-1) UR(-1)
+ T
+ LPIMZ(-1) 
+;
+EQ 24 FSR C RM(-1) RS(-1) RS(-2) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ PCPD(-1) UR(-1)
+ T
+ LPIMZ(-1)
+;
+EQ 25 FSR C RB1(-1) TPIEM1Z(-1)
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ RS(-1) RS(-2) RB(-2) 
+ T
+;
+EQ 26 FSR C LCURZ(-1) LXMFAZ(-1) RSA(-1) LCURL1Q(-1)
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+EQ 27 FSR C LIMZ(-1) LYZ(-1) LAAZ(-1) LPFZPIM(-1) D691 D692 D714 D721 
+ AG1 AG2 AG3 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ T
+ LPOP LPOP(-1) LPIM(-1)
+;
+EQ 28 FSR C LUB(-1) LU(-1) LWF(-1) LUB(-2) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ LPIMZ(-1) PCPD(-1) 
+ T
+;
+EQ 30 FSR C RS(-1) PCPD(-1) UR(-1) UR1(-1) PCM1(-1) PCM1L1A RS1(-1) RS1(-2) 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+;
+@
+@ Begin changing 
+@
+SMPL 1952.1 2017.4;
+CREATE DD1=0;
+CREATE DD2=0;
+CREATE DD3=0;
+CREATE T1= 68;
+CREATE T2=148;
+SMPL 1952.1 1968.4;
+CREATE DD1=1;
+SMPL 1969.1 1988.4;
+CREATE DD2=1;
+SMPL 1989.1 2017.4;
+CREATE DD3=1;
+SMPL 1952.1 2017.4;
+CREATE CNST1=DD1-T2*DD2/(T1-T2)+T*DD2/(T1-T2);
+CREATE CNST2=DD3+T1*DD2/(T1-T2)-T*DD2/(T1-T2);
+@CREATE CNST3=CNST1+CNST2; 
+@(equals C)
+CREATE TA=T*CNST1;
+CREATE TB=T*CNST2;
+@CREATE TC=TA+TB; 
+@(equals T)
+@
+@ Estimate the 30 equations 
+@
+@ Check equation 30 for zero bound
+@
+SMPL 1954.1 2017.4;
+2SLS; 
+EST 10 PLOT=8; 
+END;
+SMPL 1952.1 2017.4;
+CREATE BETA1=0;
+CREATE BETA2=0;
+CREATE BETA1=COEF(1,10);
+CREATE BETA2=COEF(2,10);
+CREATE DELTA1=BETA1/(1-BETA2);
+GENR LWFQZ=LWFQ-DELTA1*LPF(-1);
+GENR LPFZ=LPF-DELTA1*LPF(-1);
+EQ 16 LWFQZ LWFQZPF(-1) LPFZ C T ;
+LHS WF=EXP(LWFQZ+DELTA1*LPF(-1))*LAM;
+EQ 16 FSR LWFQZPF(-1) LPF(-1) LPF(-2)  C T 
+ LCOGSZ(-1) LTRGSZ(-1) LEXZ(-1)
+ LPIM(-1)
+;
+SMPL 1954.1 2017.4;
+2SLS ;
+EST 1-5 PLOT=8;
+EST 6 PLOT=8;
+EST 7-14 PLOT=8;
+SMPL 1956.1 2017.4;
+EST 15 PLOT=8;
+SMPL 1954.1 2017.4;
+EST 16-29 PLOT=8;
+SMPL 1954.1 2008.3;
+EST 30 PLOT=8;
+END;
+@ MC SPECIAL
+SMPL 1960.1 2017.4;
+GENR LPXA=LOG(USPX$)-LOG(USPW$);                                               
+GENR LPXB=LOG(GDPD)-LOG(USPW$);                                               
+EQ  31  LPXA LPXB RHO=2;                                                      
+LHS USPX$=EXP(LPXA)*USPW$;
+SMPL 1961.1 2016.4;                                                     
+2SLS; 
+EST 31 PLOT=8; 
+END;
+@ CA BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT CAM10$=CAPSI1*(CAIM/(CAE10*CAPM10));
+IDENT CAEX=(CAX10$*CAE10*CAPX10)/CAPSI2;
+IDENT CAY=CAC+CAI+CAG+CAEX-CAIM+CASTAT+CAV1;
+IDENT CAH=CAE/GEE;
+IDENT CAPM=CAPSI3*CAPMP;
+IDENT CAPX$=(CAE10/CAE)*CAPX;
+IDENT CAZZ=LOG(CAY)-LOG(CAYS);
+IDENT CAJMIN=CAY/CALAM;
+IDENT CAUR=(CAL1-CAJ)/CAL1;
+@
+GENR CALIMZ=LOG(CAIM/CAPOP);                                                  
+GENR CALCIGZ=LOG((CAC+CAI+CAG)/CAPOP);                                        
+GENR CALPYZZ=LOG(CAPY/    CAPM);                                              
+GENR CALCZ=LOG(CAC/CAPOP);                                                    
+GENR CALYZ=LOG(CAY/CAPOP);                                                    
+GENR CALI=LOG(CAI);                                                           
+GENR CALY=LOG(CAY);                                                           
+GENR CALPY=LOG(CAPY);                                                         
+GENR CALPM=LOG(CAPM);                                                         
+GENR CAPCPY=100*((CAPY/CAPY(-1))**4-1);                                       
+GENR CARBZ=      CARB-    CARS(-2);                                           
+GENR CARBZZ=     CARB(-1)-CARS(-2);                                           
+GENR CARSZ=      CARS-    CARS(-2);                                           
+GENR CARSZZ=     CARS(-1)-CARS(-2);
+GENR CALE=LOG(CAE);                                                           
+GENR CALE1=CALE-CALE(-1);                                                     
+GENR CALEA=LOG(CAPY/USPY)-CALE(-1);           
+GENR CALPXA=LOG(CAPX/(CAPW$*(CAE/CAE10)));
+GENR CALPXB=LOG(CAPY/(CAPW$*(CAE/CAE10)));
+GENR CALJ1=LOG(CAJ/CAJ(-1));                                                  
+GENR CALY1=LOG(CAY/CAY(-1));                                                  
+GENR CALEXL=LOG(CAJ/CAJMIN);                                                  
+GENR CALL1Z=LOG(CAL1/CAPOP1);                                                 
+GENR CALGZ=LOG(CAG/CAPOP);                                                  
+GENR CALEXZ=LOG(CAEX/CAPOP);                                                
+GENR CALRSZ=.25*LOG((1+CARS/100.)/(1+USRS/100.));
+@
+EQ  41 CALIMZ C CALIMZ(-1) CALPYZZ CALCIGZ RHO=1 
+;                            
+LHS CAIM=EXP(CALIMZ)*CAPOP;                                                   
+EQ  42 CALCZ C CALCZ(-1) CARB(-1) CALYZ                                       
+;                                                                             
+LHS CAC=EXP(CALCZ)*CAPOP;                                                     
+EQ  43 CALI C CALI(-1) CALY CARB(-1)                                          
+ FSR C CALGZ CALEXZ(-1) CALPY(-1) CALYZ(-1) CARB(-1) CALI(-1) CALY(-1)
+;                                                           
+LHS CAI=EXP(CALI);                                                            
+EQ  44 CALPY CALPY(-1) C T CALPM CAZZ(-1) RHO=1 
+;                                                                             
+LHS CAPY=EXP(CALPY);                                                          
+EQ  45 CARS C CARS(-1) CAZZ USRS                                       
+ FSR C CALGZ CALEXZ(-1) CALPY(-1) CALYZ(-1) CARB(-1) CARS(-1) CAZZ(-1) 
+ USRS(-1) CALPY(-2) 
+;                                                                             
+LHS CARS=(ABS(CARS-.0)+CARS-.0)/2.+.0;                                        
+EQ  46 CARBZ C CARBZZ CARSZ CARSZZ                                            
+ FSR C CALGZ CALEXZ(-1) CALPY(-1) CALYZ(-1) CARB(-1) CARB(-2) CARS(-1) CARS(-2)
+;                                                                             
+LHS  CARB=       CARBZ+   CARS(-2);                                           
+EQ  47 CALE1  C CALRSZ CALEA RHO=1                                             
+ FSR C CALGZ CALEXZ(-1) CALPY(-1) CALYZ(-1) CARB(-1) CALE1(-1) CALEA(-1) 
+ CALRSZ(-1)                                               
+;                                                                             
+EQ  48  CALPXA CALPXB RHO=2
+;                                                  
+LHS CAPX=EXP(CALPXA)*(CAPW$*(CAE/CAE10));                                     
+LHS CAE=EXP(CALE1)*CAE(-1);                                       
+EQ  49  CALJ1 C T CALEXL(-1) CALY1 CALY1(-1)                                  
+ FSR C CALGZ CALEXZ(-1) CALPY(-1) CALYZ(-1) CARB(-1) CALJ1(-1) CALEXL(-1) 
+CALY1(-1) T                                             
+;                                                                             
+LHS CAJ=EXP(CALJ1)*CAJ(-1);                                                   
+2SLS;
+ SMPL  1961.1 2017.4;
+EST  41 PLOT=8;
+ SMPL  1961.1 2017.2;
+EST  42 PLOT=8;
+ SMPL  1961.1 2017.2;
+EST  43 PLOT=8;
+ SMPL  1970.1 2017.4;
+EST  44 PLOT=8;
+ SMPL  1972.2 2017.1;
+EST  45 PLOT=8;
+ SMPL  1961.1 2017.1;
+EST  46 PLOT=8;
+ SMPL  1972.2 2017.1;
+EST  47 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST  48 PLOT=8;
+ SMPL  1961.1 2016.3;
+EST  49 PLOT=8;
+END;
+@ JA BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT JAM10$=JAPSI1*(JAIM/(JAE10*JAPM10));
+IDENT JAEX=(JAX10$*JAE10*JAPX10)/JAPSI2;
+IDENT JAY=JAC+JAI+JAG+JAEX-JAIM+JASTAT+JAV1;
+IDENT JAH=JAE/GEE;
+IDENT JAPM=JAPSI3*JAPMP;
+IDENT JAPX$=(JAE10/JAE)*JAPX;
+IDENT JAZZ=LOG(JAY)-LOG(JAYS);
+IDENT JAJMIN=JAY/JALAM;
+IDENT JAUR=(JAL1-JAJ)/JAL1;
+@
+GENR JALIMZ=LOG(JAIM/JAPOP);                                                  
+GENR JALCIGZ=LOG((JAC+JAI+JAG)/JAPOP);                                        
+GENR JALPYZZ=LOG(JAPY/    JAPM);                                              
+GENR JALCZ=LOG(JAC/JAPOP);                                                    
+GENR JALYZ=LOG(JAY/JAPOP);                                                    
+GENR JALI=LOG(JAI);                                                           
+GENR JALY=LOG(JAY);                                                           
+GENR JALPY=LOG(JAPY);                                                         
+GENR JALPM=LOG(JAPM);                                                         
+GENR JAPCPY=100*((JAPY/JAPY(-1))**4-1);                                       
+GENR JARBZ=      JARB-    JARS(-2);                                           
+GENR JARBZZ=     JARB(-1)-JARS(-2);                                           
+GENR JARSZ=      JARS-    JARS(-2);                                           
+GENR JARSZZ=     JARS(-1)-JARS(-2);
+GENR JALE=LOG(JAE);                                                           
+GENR JALE1=JALE-JALE(-1);                                                     
+GENR JALEA=LOG(JAPY/USPY)-JALE(-1);           
+GENR JALPXA=LOG(JAPX/(JAPW$*(JAE/JAE10)));
+GENR JALPXB=LOG(JAPY/(JAPW$*(JAE/JAE10)));
+GENR JALJ1=LOG(JAJ/JAJ(-1));                                                  
+GENR JALY1=LOG(JAY/JAY(-1));                                                  
+GENR JALEXL=LOG(JAJ/JAJMIN);                                                  
+GENR JALL1Z=LOG(JAL1/JAPOP1);                                                 
+GENR JALGZ=LOG(JAG/JAPOP);                                                  
+GENR JALEXZ=LOG(JAEX/JAPOP);                                                
+GENR JALRSZ=.25*LOG((1+JARS/100.)/(1+USRS/100.));
+@
+EQ  51 JALIMZ C JALIMZ(-1) JALCIGZ JALPYZZ RHO=1
+;
+LHS JAIM=EXP(JALIMZ)*JAPOP;                                                   
+EQ  52 JALCZ C JALCZ(-1) JARB JALYZ RHO=1                                     
+ FSR C JALGZ JALEXZ(-1) JALPY(-1) JALYZ(-1) JARB(-1)  JALCZ(-1) JALCZ(-2)
+;                                                                             
+LHS JAC=EXP(JALCZ)*JAPOP;                                                     
+EQ  54 JALPY JALPY(-1) C T JALPM RHO=1 JAZZ(-1)                          
+;                                                                             
+LHS JAPY=EXP(JALPY);                                                          
+EQ  55 JARS C JARS(-1) JAPCPY USRS RHO=1                                      
+ FSR C JALGZ JALEXZ(-1) JALPY(-1) JALYZ(-1) JARB(-1)  JARS(-1) JARS(-2) 
+ USRS(-1) JALPY(-2) JAZZ(-1)
+;                                                                             
+LHS JARS=(ABS(JARS-.0)+JARS-.0)/2.+.0;                                        
+EQ  56 JARBZ C JARBZZ JARSZ JARSZZ                                            
+ FSR C JALGZ JALEXZ(-1) JALPY(-1) JALYZ(-1) JARB(-1) JARB(-2) JARS(-1) JARS(-2)
+;                                                                             
+LHS  JARB=       JARBZ+   JARS(-2);                                           
+GENR JALE1Z=JALE1-.05*JALEA;                                                  
+EQ  57 JALE1Z C JALRSZ RHO=1 
+ FSR C JALGZ JALEXZ(-1) JALPY(-1) JALYZ(-1) JARB(-1) JALE1(-1) JALEA(-1) 
+ JALRSZ(-1)                                               
+;                                                                             
+EQ  58  JALPXA JALPXB RHO=2
+;                                                  
+LHS JAPX=EXP(JALPXA)*(JAPW$*(JAE/JAE10));                                     
+LHS JAE=EXP(JALE1Z+.050*JALEA)*JAE(-1);                                       
+EQ  59  JALJ1 C T JALEXL(-1) JALY1 
+;
+LHS JAJ=EXP(JALJ1)*JAJ(-1);                                                   
+EQ  60  JALL1Z C T JALL1Z(-1) JAUR 
+ FSR C JALGZ JALEXZ(-1) JALPY(-1) JALYZ(-1) JARB(-1) JALL1Z(-1) T  JAUR(-1) 
+;                                                                             
+LHS JAL1=EXP(JALL1Z)*JAPOP1;                                                  
+2SLS;
+ SMPL  1961.1 2017.4;
+EST  51 PLOT=8;
+ SMPL  1966.1 2016.3;
+EST  52 PLOT=8;
+ SMPL  1970.1 2017.4;
+EST  54 PLOT=8;
+ SMPL  1972.2 2016.4;
+EST  55 PLOT=8;
+ SMPL  1966.1 2016.3;
+EST  56 PLOT=8;
+ SMPL  1972.2 2016.4;
+EST  57 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST  58 PLOT=8;
+ SMPL  1961.1 2016.3;
+EST  59 PLOT=8;
+ SMPL  1965.4 2016.3;
+EST  60 PLOT=8;
+END;
+@ AU BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT AUM10$=AUPSI1*(AUIM/(AUE10*AUPM10));
+IDENT AUEX=(AUX10$*AUE10*AUPX10)/AUPSI2;
+IDENT AUY=AUC+AUI+AUG+AUEX-AUIM+AUSTAT+AUV1;
+IDENT AUE=AUH*GEE;  
+IDENT AUPM=AUPSI3*AUPMP;
+IDENT AUPX$=(AUE10/AUE)*AUPX;
+IDENT AUZZ=LOG(AUY)-LOG(AUYS);
+IDENT AUJMIN=AUY/AULAM;
+IDENT AUUR=(AUL1-AUJ)/AUL1;
+@
+GENR AULIMZ=LOG(AUIM/AUPOP);                                                  
+GENR AULCIGZ=LOG((AUC+AUI+AUG)/AUPOP);                                        
+GENR AULPYZZ=LOG(AUPY/    AUPM);                                              
+GENR AULCZ=LOG(AUC/AUPOP);                                                    
+GENR AULYZ=LOG(AUY/AUPOP);                                                    
+GENR AULI=LOG(AUI);                                                           
+GENR AULY=LOG(AUY);                                                           
+GENR AULPY=LOG(AUPY);                                                         
+GENR AULPM=LOG(AUPM);                                                         
+GENR AUPCPY=100*((AUPY/AUPY(-1))**4-1);                                       
+GENR AURBZ=      AURB-    AURS(-2);                                           
+GENR AURBZZ=     AURB(-1)-AURS(-2);                                           
+GENR AURSZ=      AURS-    AURS(-2);                                           
+GENR AURSZZ=     AURS(-1)-AURS(-2);
+GENR AULH=LOG(AUH);                                                           
+GENR AULH1=AULH-AULH(-1);                                                     
+GENR AULHA=LOG(AUPY/GEPY)-AULH(-1);           
+GENR AULPXA=LOG(AUPX/(AUPW$*(AUE/AUE10)));
+GENR AULPXB=LOG(AUPY/(AUPW$*(AUE/AUE10)));
+GENR AULJ1=LOG(AUJ/AUJ(-1));                                                  
+GENR AULY1=LOG(AUY/AUY(-1));                                                  
+GENR AULEXL=LOG(AUJ/AUJMIN);                                                  
+GENR AULL1Z=LOG(AUL1/AUPOP1);                                                 
+GENR AULGZ=LOG(AUG/AUPOP);                                                  
+GENR AULEXZ=LOG(AUEX/AUPOP);                                                
+@
+EQ  61 AULIMZ C AULIMZ(-1) AULCIGZ AULPYZZ
+;                                   
+LHS AUIM=EXP(AULIMZ)*AUPOP;                                                   
+EQ  62 AULCZ C AULCZ(-1) AULYZ AURS
+ FSR C AULGZ AULEXZ(-1) AULPY(-1) AULYZ(-1) AURB(-1) AULCZ(-1) AURS(-1)
+;                                                                             
+LHS AUC=EXP(AULCZ)*AUPOP;                                                     
+EQ  63 AULI C AULI(-1) AULY AURB                                              
+ FSR C AULGZ AULEXZ(-1) AULPY(-1) AULYZ(-1) AURB(-1)  AULI(-1) AULY(-1)
+;                                                                             
+LHS AUI=EXP(AULI);                                                            
+EQ  64 AULPY AULPY(-1) C T AULPM RHO=1  AUZZ(-1)
+ FSR C AULGZ AULEXZ(-1) AULPY(-1) AULYZ(-1) AURB(-1) AULPY(-2) T AULPM(-1)
+ AUZZ(-1)  AUZZ(-2)
+;                                                                             
+LHS AUPY=EXP(AULPY);                                                          
+EQ  65 AURS C AURS(-1) AUZZ USRS                                             
+ FSR C AULGZ AULEXZ(-1) AULPY(-1) AULYZ(-1) AURB(-1) AURS(-1) GERS(-1) 
+ USRS(-1)  AUZZ(-1)
+;                                                                             
+LHS AURS=(1-EU1)*AURS+EU1*EURS;                                            
+EQ  66 AURBZ C AURBZZ AURSZ AURSZZ RHO=1                                      
+ FSR C AULGZ AULEXZ(-1) AULPY(-1) AULYZ(-1) AURB(-1) AURB(-2) AURS(-1) 
+ AURS(-2) AURS(-3)                                          
+;                                                                             
+LHS  AURB=      (1-EU1)*(AURBZ+   AURS(-2))+EU1*EURB;                       
+GENR AULH1Z=AULH1-.050*AULHA;                                                 
+EQ  67 AULH1Z C RHO=1 
+ FSR C AULGZ AULEXZ(-1) AULPY(-1) AULYZ(-1) AURB(-1) AULH1(-1) AULHA(-1)
+;                                                                             
+LHS AUH=(1-EU1)*(EXP(AULH1Z+.050*AULHA)*AUH(-1))+EU1*1;                       
+EQ  68  AULPXA AULPXB RHO=2
+;                                                  
+LHS AUPX=EXP(AULPXA)*(AUPW$*(AUE/AUE10));                                     
+2SLS;
+ SMPL  1961.1 2017.4;
+EST  61 PLOT=8;
+ SMPL  1971.3 2017.1;
+EST  62 PLOT=8;
+ SMPL  1971.3 2017.1;
+EST  63 PLOT=8;
+ SMPL  1971.3 2017.2;
+EST  64 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  65 PLOT=8;
+ SMPL  1971.3 1998.4;
+EST  66 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  67 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST  68 PLOT=8;
+END;
+@ FR BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT FRM10$=FRPSI1*(FRIM/(FRE10*FRPM10));
+IDENT FREX=(FRX10$*FRE10*FRPX10)/FRPSI2;
+IDENT FRY=FRC+FRI+FRG+FREX-FRIM+FRSTAT+FRV1;
+IDENT FRE=FRH*GEE;  
+IDENT FRPM=FRPSI3*FRPMP;
+IDENT FRPX$=(FRE10/FRE)*FRPX;
+IDENT FRZZ=LOG(FRY)-LOG(FRYS);
+IDENT FRJMIN=FRY/FRLAM;
+IDENT FRUR=(FRL1-FRJ)/FRL1;
+@
+GENR FRLIMZ=LOG(FRIM/FRPOP);                                                  
+GENR FRLCIGZ=LOG((FRC+FRI+FRG)/FRPOP);                                        
+GENR FRLPYZZ=LOG(FRPY/    FRPM);                                              
+GENR FRLCZ=LOG(FRC/FRPOP);                                                    
+GENR FRLYZ=LOG(FRY/FRPOP);                                                    
+GENR FRLI=LOG(FRI);                                                           
+GENR FRLY=LOG(FRY);                                                           
+GENR FRLPY=LOG(FRPY);                                                         
+GENR FRLPM=LOG(FRPM);                                                         
+GENR FRPCPY=100*((FRPY/FRPY(-1))**4-1);                                       
+GENR FRRBZ=      FRRB-    FRRS(-2);                                           
+GENR FRRBZZ=     FRRB(-1)-FRRS(-2);                                           
+GENR FRRSZ=      FRRS-    FRRS(-2);                                           
+GENR FRRSZZ=     FRRS(-1)-FRRS(-2);
+GENR FRLH=LOG(FRH);                                                           
+GENR FRLH1=FRLH-FRLH(-1);                                                     
+GENR FRLHA=LOG(FRPY/GEPY)-FRLH(-1);           
+GENR FRLPXA=LOG(FRPX/(FRPW$*(FRE/FRE10)));
+GENR FRLPXB=LOG(FRPY/(FRPW$*(FRE/FRE10)));
+GENR FRLJ1=LOG(FRJ/FRJ(-1));                                                  
+GENR FRLY1=LOG(FRY/FRY(-1));                                                  
+GENR FRLEXL=LOG(FRJ/FRJMIN);                                                  
+GENR FRLL1Z=LOG(FRL1/FRPOP1);                                                 
+GENR FRLGZ=LOG(FRG/FRPOP);                                                  
+GENR FRLEXZ=LOG(FREX/FRPOP);                                                
+@
+EQ  71 FRLIMZ C FRLIMZ(-1) FRLPYZZ FRLCIGZ                                    
+;                                                                             
+LHS FRIM=EXP(FRLIMZ)*FRPOP;                                                   
+EQ  72 FRLCZ C FRLCZ(-1) FRLYZ  FRRS 
+;                                                                             
+LHS FRC=EXP(FRLCZ)*FRPOP;                                                     
+EQ  73 FRLI C FRLI(-1) FRLY FRRB(-1) 
+ FSR C FRLGZ FRLEXZ(-1) FRLPY(-1) FRLYZ(-1) FRRB(-1) FRLI(-1) FRLY(-1)
+;                                                                             
+LHS FRI=EXP(FRLI);                                                            
+EQ  74 FRLPY FRLPY(-1) C T FRLPM FRZZ(-1) 
+@ RHO=1                               
+ FSR C FRLGZ FRLEXZ(-1) FRLPY(-1) FRLYZ(-1) FRRS(-1) FRLPY(-2) T  FRZZ(-1) 
+ FRLPM(-1) 
+@ FRZZ(-2) FRLPM(-2)
+;                                                                             
+LHS FRPY=EXP(FRLPY);                                                          
+@ SPECIAL MCEURO
+@EQ 75 FRRS GERS;
+@COEF;
+@1 75 1.0
+@0
+@ END SPECIAL MCEURO
+EQ  75 FRRS C FRRS(-1) USRS GERS FRPCPY FRZZ 
+ FSR C FRLGZ FRLEXZ(-1) FRLPY(-1) FRLYZ(-1) FRRS(-1) USRS(-1) 
+ GERS(-1) FRZZ(-1) 
+;                                                                             
+LHS FRRS=(1-EU1)*FRRS+EU1*EURS;                                            
+@ SPECIAL MCEURO
+@EQ 76 FRRB GERB;
+@COEF;
+@1 76 1.0
+@0
+@ END SPECIAL MCEURO
+EQ  76 FRRBZ C FRRBZZ FRRSZ FRRSZZ RHO=1                                      
+ FSR C FRLGZ FRLEXZ(-1) FRLPY(-1) FRLYZ(-1) FRRB(-1) FRRB(-2) FRRS(-1) 
+ FRRS(-2) FRRS(-3)                                          
+;                                                                             
+LHS  FRRB=  (1-EU1)*(FRRBZ+   FRRS(-2))+EU1*EURB;                           
+@ SPECIAL MCEURO
+@EQ 77 FRH C;
+@COEF;
+@1 77 1.0
+@0
+@ END SPECIAL MCEURO
+EQ  77 FRLH1 C FRLHA RHO=1                                                    
+ FSR C FRLGZ FRLEXZ(-1) FRLPY(-1) FRLYZ(-1) FRRS(-1) FRLH1(-1) FRLHA(-1)
+;                                                                             
+LHS FRH=(1-EU1)*(EXP(FRLH1)*FRH(-1))+EU1*1;                                   
+EQ  78  FRLPXA FRLPXB RHO=2
+;                                                  
+LHS FRPX=EXP(FRLPXA)*(FRPW$*(FRE/FRE10));                                     
+2SLS;
+ SMPL  1965.1 2016.4;
+EST  71 PLOT=8;
+ SMPL  1965.1 2017.1;
+EST  72 PLOT=8;
+ SMPL  1970.1 2017.1;
+EST  73 PLOT=8;
+ SMPL  1965.3 2016.4;
+EST  74 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  75 PLOT=0;
+ SMPL  1970.1 1998.4;
+EST  76 PLOT=0;
+ SMPL  1972.2 1998.4;
+EST  77 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST  78 PLOT=8;
+END;
+@ GE BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT GEM10$=GEPSI1*(GEIM/(GEE10*GEPM10));
+IDENT GEEX=(GEX10$*GEE10*GEPX10)/GEPSI2;
+IDENT GEY=GEC+GEI+GEG+GEEX-GEIM+GESTAT+GEV1;
+IDENT GEPM=GEPSI3*GEPMP;
+IDENT GEPX$=(GEE10/GEE)*GEPX;
+IDENT GEZZ=LOG(GEY)-LOG(GEYS);
+IDENT GEJMIN=GEY/GELAM;
+IDENT GEUR=(GEL1-GEJ)/GEL1;
+@
+GENR GELIMZ=LOG(GEIM/GEPOP);                                                  
+GENR GELCIGZ=LOG((GEC+GEI+GEG)/GEPOP);                                        
+GENR GELPYZZ=LOG(GEPY/    GEPM);                                              
+GENR GELCZ=LOG(GEC/GEPOP);                                                    
+GENR GELYZ=LOG(GEY/GEPOP);                                                    
+GENR GELI=LOG(GEI);                                                           
+GENR GELY=LOG(GEY);                                                           
+GENR GELPY=LOG(GEPY);                                                         
+GENR GELPM=LOG(GEPM);                                                         
+GENR GEPCPY=100*((GEPY/GEPY(-1))**4-1);                                       
+GENR GERBZ=      GERB-    GERS(-2);                                           
+GENR GERBZZ=     GERB(-1)-GERS(-2);                                           
+GENR GERSZ=      GERS-    GERS(-2);                                           
+GENR GERSZZ=     GERS(-1)-GERS(-2);
+GENR GELE=LOG(GEE);                                                           
+GENR GELE1=GELE-GELE(-1);                                                     
+GENR GELEA=LOG(GEPY/USPY)-GELE(-1);           
+GENR GELPXA=LOG(GEPX/(GEPW$*(GEE/GEE10)));
+GENR GELPXB=LOG(GEPY/(GEPW$*(GEE/GEE10)));
+GENR GELJ1=LOG(GEJ/GEJ(-1));                                                  
+GENR GELY1=LOG(GEY/GEY(-1));                                                  
+GENR GELEXL=LOG(GEJ/GEJMIN);                                                  
+GENR GELL1Z=LOG(GEL1/GEPOP1);                                                 
+GENR GELGZ=LOG(GEG/GEPOP);                                                  
+GENR GELEXZ=LOG(GEEX/GEPOP);                                                
+GENR GELRSZ=.25*LOG((1+GERS/100.)/(1+USRS/100.));
+@
+EQ  81 GELIMZ C GELIMZ(-1) GELCIGZ  GELPYZZ 
+;                                                                             
+LHS GEIM=EXP(GELIMZ)*GEPOP;                                                   
+EQ  82 GELCZ C GELCZ(-1) GELYZ 
+;                                                                             
+LHS GEC=EXP(GELCZ)*GEPOP;                                                     
+EQ  83 GELI C GELI(-1) GELY GERB(-1)
+;                                                                             
+LHS GEI=EXP(GELI);                                                            
+EQ  84 GELPY GELPY(-1) C T GELPM GEZZ(-1) 
+ FSR C GELGZ GELEXZ(-1) GELPY(-1) GELYZ(-1) GERB(-1) T  GELPM(-1) GEZZ(-1) 
+ GEZZ(-2) GELPY(-2)                                                  
+;                                                                             
+LHS GEPY=EXP(GELPY);          
+@ SPECIAL FOR MCEURO  
+EQ  85 GERS C GERS(-1) GEZZ USRS GEPCPY(-1)                                  
+ FSR C GELGZ GELEXZ(-1) GELPY(-1) GELYZ(-1) GERB(-1) GERS(-1) GEZZ(-1) 
+ USRS(-1) GELPY(-2)                                         
+;                                                                             
+LHS GERS=(1-EU1)*GERS+EU1*EURS;                                            
+EQ  86 GERBZ C GERBZZ GERSZ GERSZZ                                            
+ FSR C GELGZ GELEXZ(-1) GELPY(-1) GELYZ(-1) GERB(-1) GERB(-2) GERS(-1) GERS(-2)
+;                                                                             
+LHS  GERB=  (1-EU1)*(GERBZ+   GERS(-2))+EU1*EURB;                           
+EQ  87 GELE1 C GELEA GELRSZ RHO=1                                             
+ FSR C GELGZ GELEXZ(-1) GELPY(-1) GELYZ(-1) GERB(-1) GELE1(-1) GELEA(-1) 
+ GELRSZ(-1)                                               
+;                                                                             
+LHS GEE=(1-EU1)*(EXP(GELE1)*GEE(-1))+EU1*EUE;                                 
+@ END SPECIAL FOR MCEURO
+EQ  88  GELPXA GELPXB RHO=2 
+;                                                 
+LHS GEPX=EXP(GELPXA)*(GEPW$*(GEE/GEE10));                                     
+EQ  89  GELJ1 C T GELEXL(-1) GELY1                                            
+ FSR C GELGZ GELEXZ(-1) GELPY(-1) GELYZ(-1) GERB(-1) GELJ1(-1) T GELEXL(-1) 
+ GELY1(-1)                                             
+;                                                                             
+LHS GEJ=EXP(GELJ1)*GEJ(-1);                                                   
+2SLS;
+ SMPL  1961.1 2017.4;
+EST  81 PLOT=8;
+ SMPL  1961.1 2017.1;
+EST  82 PLOT=8;
+ SMPL  1961.1 2017.1;
+EST  83 PLOT=8;
+ SMPL  1961.1 2017.2;
+EST  84 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  85 PLOT=8;
+ SMPL  1961.1 1998.4;
+EST  86 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  87 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST  88 PLOT=8;
+ SMPL  1963.1 2017.2;
+EST  89 PLOT=8;
+END;
+@ IT BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT ITM10$=ITPSI1*(ITIM/(ITE10*ITPM10));
+IDENT ITEX=(ITX10$*ITE10*ITPX10)/ITPSI2;
+IDENT ITY=ITC+ITI+ITG+ITEX-ITIM+ITSTAT+ITV1;
+IDENT ITE=ITH*GEE;   
+IDENT ITPM=ITPSI3*ITPMP;
+IDENT ITPX$=(ITE10/ITE)*ITPX;
+IDENT ITZZ=LOG(ITY)-LOG(ITYS);
+IDENT ITJMIN=ITY/ITLAM;
+IDENT ITUR=(ITL1-ITJ)/ITL1;
+@
+GENR ITLIMZ=LOG(ITIM/ITPOP);                                                  
+GENR ITLCIGZ=LOG((ITC+ITI+ITG)/ITPOP);                                        
+GENR ITLPYZZ=LOG(ITPY/    ITPM);                                              
+GENR ITLCZ=LOG(ITC/ITPOP);                                                    
+GENR ITLYZ=LOG(ITY/ITPOP);                                                    
+GENR ITLI=LOG(ITI);                                                           
+GENR ITLY=LOG(ITY);                                                           
+GENR ITLPY=LOG(ITPY);                                                         
+GENR ITLPM=LOG(ITPM);                                                         
+GENR ITPCPY=100*((ITPY/ITPY(-1))**4-1);                                       
+GENR ITRBZ=      ITRB-    ITRS(-2);                                           
+GENR ITRBZZ=     ITRB(-1)-ITRS(-2);                                           
+GENR ITRSZ=      ITRS-    ITRS(-2);                                           
+GENR ITRSZZ=     ITRS(-1)-ITRS(-2);
+GENR ITLH=LOG(ITH);                                                           
+GENR ITLH1=ITLH-ITLH(-1);                                                     
+GENR ITLHA=LOG(ITPY/GEPY)-ITLH(-1);           
+GENR ITLPXA=LOG(ITPX/(ITPW$*(ITE/ITE10)));
+GENR ITLPXB=LOG(ITPY/(ITPW$*(ITE/ITE10)));
+GENR ITLJ1=LOG(ITJ/ITJ(-1));                                                  
+GENR ITLY1=LOG(ITY/ITY(-1));                                                  
+GENR ITLEXL=LOG(ITJ/ITJMIN);                                                  
+GENR ITLL1Z=LOG(ITL1/ITPOP1);                                                 
+GENR ITLGZ=LOG(ITG/ITPOP);                                                  
+GENR ITLEXZ=LOG(ITEX/ITPOP);                                                
+@
+EQ  91 ITLIMZ C ITLIMZ(-1) ITLPYZZ ITLCIGZ                                    
+;                                                                             
+LHS ITIM=EXP(ITLIMZ)*ITPOP;                                                   
+EQ  92 ITLCZ C ITLCZ(-1) ITLYZ 
+;                                                                             
+LHS ITC=EXP(ITLCZ)*ITPOP;                                                     
+EQ  93 ITLI C ITLI(-1) ITLY 
+;                                                                             
+LHS ITI=EXP(ITLI);                                                            
+EQ  94 ITLPY ITLPY(-1) C T ITLPM  ITZZ(-1) 
+  FSR C ITLGZ ITLEXZ(-1) ITLPY(-1) ITLYZ(-1) ITRS(-1) T ITLPM(-1) ITZZ(-1) 
+  ITZZ(-2) ITLPY(-2)                                                  
+;                                                                             
+LHS ITPY=EXP(ITLPY);                                                          
+@ SPECIAL MCEURO 
+@EQ 95 ITRS GERS;
+@COEF;
+@1 95 1.0
+@0
+@ END SPECIAL MCEURO
+EQ  95 ITRS C ITRS(-1) ITPCPY ITZZ RHO=1                                     
+  FSR C ITLGZ ITLEXZ(-1) ITLPY(-1) ITLYZ(-1) ITRS(-1) ITRS(-2) 
+  ITZZ(-1) ITZZ(-2) ITLPY(-2)
+;
+LHS ITRS=(1-EU1)*ITRS+EU1*EURS;                                            
+GENR ITLH1Z=ITLH1-.050*ITLHA;                                                 
+@ SPECIAL MCEURO 
+@EQ 97 ITH C;
+@COEF;
+@1 97 1.0
+@0
+@ END SPECIAL MCEURO
+EQ  97 ITLH1Z  C RHO=1 
+  FSR C ITLGZ ITLEXZ(-1) ITLPY(-1) ITLYZ(-1) ITRS(-1) ITLH1(-1) ITLHA(-1) 
+;                                                                             
+LHS ITH=(1-EU1)*(EXP(ITLH1Z+.050*ITLHA)*ITH(-1))+EU1*1;                       
+EQ  98  ITLPXA ITLPXB RHO=2
+;                                                  
+LHS ITPX=EXP(ITLPXA)*(ITPW$*(ITE/ITE10));                                     
+EQ  99  ITLJ1 C T ITLEXL(-1) ITLY1                                            
+;                                                                             
+LHS ITJ=EXP(ITLJ1)*ITJ(-1);                                                   
+2SLS;
+ SMPL  1971.2 2017.2;
+EST  91 PLOT=8;
+ SMPL  1961.1 2017.4;
+EST  92 PLOT=8;
+ SMPL  1961.1 2017.4;
+EST  93 PLOT=8;
+ SMPL  1972.2 2017.2;
+EST  94 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  95 PLOT=8;
+ SMPL  1972.2 1998.4;
+EST  97 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST  98 PLOT=8;
+ SMPL  1963.2 2017.4;
+EST  99 PLOT=8;
+END;
+@ NE BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT NEM10$=NEPSI1*(NEIM/(NEE10*NEPM10));
+IDENT NEEX=(NEX10$*NEE10*NEPX10)/NEPSI2;
+IDENT NEY=NEC+NEI+NEG+NEEX-NEIM+NESTAT+NEV1;
+IDENT NEE=NEH*GEE;   
+IDENT NEPM=NEPSI3*NEPMP;
+IDENT NEPX$=(NEE10/NEE)*NEPX;
+IDENT NEZZ=LOG(NEY)-LOG(NEYS);
+IDENT NEJMIN=NEY/NELAM;
+IDENT NEUR=(NEL1-NEJ)/NEL1;
+@
+GENR NELIMZ=LOG(NEIM/NEPOP);                                                  
+GENR NELCIGZ=LOG((NEC+NEI+NEG)/NEPOP);                                        
+GENR NELPYZZ=LOG(NEPY/    NEPM);                                              
+GENR NELCZ=LOG(NEC/NEPOP);                                                    
+GENR NELYZ=LOG(NEY/NEPOP);                                                    
+GENR NELI=LOG(NEI);                                                           
+GENR NELY=LOG(NEY);                                                           
+GENR NELPY=LOG(NEPY);                                                         
+GENR NELPM=LOG(NEPM);  
+GENR NEPCPY=100*((NEPY/NEPY(-1))**4-1);                                       
+GENR NERBZ=      NERB-    NERS(-2);                                           
+GENR NERBZZ=     NERB(-1)-NERS(-2);                                           
+GENR NERSZ=      NERS-    NERS(-2);                                           
+GENR NERSZZ=     NERS(-1)-NERS(-2);
+GENR NELH=LOG(NEH);                                                           
+GENR NELH1=NELH-NELH(-1);                                                     
+GENR NELHA=LOG(NEPY/GEPY)-NELH(-1);           
+GENR NELPXA=LOG(NEPX/(NEPW$*(NEE/NEE10)));
+GENR NELPXB=LOG(NEPY/(NEPW$*(NEE/NEE10)));
+GENR NELJ1=LOG(NEJ/NEJ(-1));                                                  
+GENR NELY1=LOG(NEY/NEY(-1));                                                  
+GENR NELEXL=LOG(NEJ/NEJMIN);                                                  
+GENR NELL1Z=LOG(NEL1/NEPOP1);                                                 
+GENR NELGZ=LOG(NEG/NEPOP);                                                  
+GENR NELEXZ=LOG(NEEX/NEPOP);                                                
+GENR NELRSZG=.25*LOG((1+NERS/100.)/(1+GERS/100.));                          
+@
+EQ 101 NELIMZ C NELIMZ(-1) NELPYZZ NELCIGZ                                    
+;                                          
+LHS NEIM=EXP(NELIMZ)*NEPOP;                                                   
+EQ 102 NELCZ C NELCZ(-1) NELYZ NERB 
+;
+LHS NEC=EXP(NELCZ)*NEPOP;                                                     
+EQ 103 NELI C NELI(-1) NELY NERB(-1)                                          
+ FSR C NELGZ NELEXZ(-1) NELPY(-1) NELYZ(-1) NERB(-1) NELI(-1) NELY(-1)
+;                                                                             
+LHS NEI=EXP(NELI);                                                            
+EQ 104 NELPY NELPY(-1) C T NELPM  NEZZ(-1) 
+;
+LHS NEPY=EXP(NELPY);                                                          
+@ SPECIAL MCEURO
+@EQ 105 NERS GERS;
+@COEF;
+@1 105 1.0
+@0
+@ END SPECIAL MCEURO
+EQ 105 NERS C NERS(-1) NEZZ GERS USRS                                      
+ FSR C NELGZ NELEXZ(-1) NELPY(-1) NELYZ(-1) NERB(-1) NERS(-1) NEZZ(-1) 
+ GERS(-1) USRS(-1)                                        
+;                                                                             
+LHS NERS=(1-EU1)*NERS+EU1*EURS;                                            
+@ SPECIAL MCEURO
+@EQ 106 NERB GERB;
+@COEF;
+@1 106 1.0
+@0
+@ END SPECIAL MCEURO
+EQ 106 NERBZ C NERBZZ NERSZ NERSZZ                                            
+ FSR C NELGZ NELEXZ(-1) NELPY(-1) NELYZ(-1) NERB(-1) NERB(-2) NERS(-1) 
+ NERS(-2)                                                   
+;                                                                             
+LHS  NERB=  (1-EU1)*(NERBZ+   NERS(-2))+EU1*EURB;                           
+GENR NELH1Z=NELH1-.050*NELHA;                                                 
+@ SPECIAL MCEURO 
+@EQ 107 NEH C;
+@COEF;
+@1 107 1.0
+@0
+@ END SPECIAL MCEURO
+EQ 107 NELH1Z C NELRSZG 
+ FSR C NELGZ NELEXZ(-1) NELPY(-1) NELYZ(-1) NERB(-1) NELH1(-1) NELHA(-1) 
+ NELRSZG(-1)                                              
+;                                                                             
+LHS NEH=(1-EU1)*(EXP(NELH1Z+.050*NELHA)*NEH(-1))+EU1*1;                       
+EQ 108  NELPXA NELPXB RHO=2
+;                                                  
+LHS NEPX=EXP(NELPXA)*(NEPW$*(NEE/NEE10));                                     
+EQ 109 NELJ1 C T NELEXL(-1) NELY1
+;    
+LHS NEJ=EXP(NELJ1)*NEJ(-1);
+2SLS;
+ SMPL  1971.1 2017.4;
+EST 101 PLOT=8;
+ SMPL  1974.1 2017.1;
+EST 102 PLOT=8;
+ SMPL  1974.1 2017.1;
+EST 103 PLOT=8;
+ SMPL  1971.1 2017.4;
+EST 104 PLOT=8;
+ SMPL  1973.2 1998.4;
+EST 105 PLOT=8;
+ SMPL  1973.3 1998.4;
+EST 106 PLOT=8;
+ SMPL  1973.2 1998.4;
+EST 107 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 108 PLOT=8;
+ SMPL  1998.2 2017.4;
+EST 109 PLOT=8;
+END;
+@ ST BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT STM10$=STPSI1*(STIM/(STE10*STPM10));
+IDENT STEX=(STX10$*STE10*STPX10)/STPSI2;
+IDENT STY=STC+STI+STG+STEX-STIM+STSTAT+STV1;
+IDENT STE=STH*GEE;   
+IDENT STPM=STPSI3*STPMP;
+IDENT STPX$=(STE10/STE)*STPX;
+IDENT STZZ=LOG(STY)-LOG(STYS);
+IDENT STJMIN=STY/STLAM;
+IDENT STUR=(STL1-STJ)/STL1;
+@
+GENR STLIMZ=LOG(STIM/STPOP);                                                  
+GENR STLCIGZ=LOG((STC+STI+STG)/STPOP);                                        
+GENR STLPYZZ=LOG(STPY/    STPM);                                              
+GENR STLCZ=LOG(STC/STPOP);                                                    
+GENR STLYZ=LOG(STY/STPOP);                                                    
+GENR STLI=LOG(STI);                                                           
+GENR STLY=LOG(STY);                                                           
+GENR STLPY=LOG(STPY);                                                         
+GENR STLPM=LOG(STPM);                                                         
+GENR STPCPY=100*((STPY/STPY(-1))**4-1);                                       
+GENR STRBZ=      STRB-    STRS(-2);                                           
+GENR STRBZZ=     STRB(-1)-STRS(-2);                                           
+GENR STRSZ=      STRS-    STRS(-2);                                           
+GENR STRSZZ=     STRS(-1)-STRS(-2);
+GENR STLH=LOG(STH);                                                           
+GENR STLH1=STLH-STLH(-1);                                                     
+GENR STLHA=LOG(STPY/GEPY)-STLH(-1);           
+GENR STLPXA=LOG(STPX/(STPW$*(STE/STE10)));
+GENR STLPXB=LOG(STPY/(STPW$*(STE/STE10)));
+GENR STLJ1=LOG(STJ/STJ(-1));                                                  
+GENR STLY1=LOG(STY/STY(-1));                                                  
+GENR STLEXL=LOG(STJ/STJMIN);                                                  
+GENR STLL1Z=LOG(STL1/STPOP1);                                                 
+GENR STLGZ=LOG(STG/STPOP);                                                  
+GENR STLEXZ=LOG(STEX/STPOP);                                                
+@
+EQ 111 STLIMZ C STLIMZ(-1) STLCIGZ STLPYZZ 
+;                           
+LHS STIM=EXP(STLIMZ)*STPOP;                                                   
+EQ 112 STLCZ C STLCZ(-1) STRB(-1) STLYZ 
+;                                                                             
+LHS STC=EXP(STLCZ)*STPOP;                                                     
+EQ 113 STLI C STLI(-1) STLY STRB(-1) 
+;
+LHS STI=EXP(STLI);                                                            
+EQ 114 STLPY STLPY(-1) C T STLPM STZZ(-1)
+ FSR C STLGZ STLEXZ(-1) STLPY(-1) STLYZ(-1) STRB(-1) T  STZZ(-1) 
+;                                                                             
+LHS STPY=EXP(STLPY);                                                          
+EQ 115 STRS C STRS(-1) RHO=1 STPCPY                                     
+ FSR C STLGZ STLEXZ(-1) STLPY(-1) STLYZ(-1) STRB(-1) STRS(-1) STRS(-2) 
+ STZZ(-1) STLPY(-2) 
+;                                                                             
+LHS STRS=(ABS(STRS-.0)+STRS-.0)/2.+.0;                                        
+EQ 116 STRBZ C STRBZZ STRSZ STRSZZ                                            
+ FSR C STLGZ STLEXZ(-1) STLPY(-1) STLYZ(-1) STRB(-1) STRB(-2) STRS(-1) 
+ STRS(-2)                                                   
+;                                                                             
+LHS  STRB=       STRBZ+   STRS(-2);                                           
+GENR STLH1Z=STLH1-.05*STLHA;                                                  
+EQ 117 STLH1Z C 
+ FSR C STLGZ STLEXZ(-1) STLPY(-1) STLYZ(-1) STRB(-1) STLH1(-1) STLHA(-1)
+;                                                                             
+LHS STH=EXP(STLH1Z+.050*STLHA)*STH(-1);                                       
+EQ 118  STLPXA STLPXB RHO=2
+;                                                  
+LHS STPX=EXP(STLPXA)*(STPW$*(STE/STE10));                                     
+EQ 119  STLJ1 C T STLEXL(-1) STLY1                                            
+;                                                                             
+LHS STJ=EXP(STLJ1)*STJ(-1);                                                   
+EQ 120  STLL1Z C T STLL1Z(-1) STUR
+ FSR C STLGZ STLEXZ(-1) STLPY(-1) STLYZ(-1) STRB(-1) STLL1Z(-1) T STUR(-1)
+;                                                                             
+LHS STL1=EXP(STLL1Z)*STPOP1;                                                  
+2SLS;
+ SMPL  1963.1 2017.4;
+EST 111 PLOT=8;
+ SMPL  1961.1 2017.2;
+EST 112 PLOT=8;
+ SMPL  1961.1 2017.2;
+EST 113 PLOT=8;
+ SMPL  1963.2 2017.3;
+EST 114 PLOT=8;
+ SMPL  1972.2 2017.2;
+EST 115 PLOT=8;
+ SMPL  1972.2 2017.2;
+EST 116 PLOT=8;
+ SMPL  1972.2 2017.3;
+EST 117 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 118 PLOT=8;
+ SMPL  1991.2 2017.4;
+EST 119 PLOT=8;
+ SMPL  2005.2 2017.3;
+EST 120 PLOT=8;
+END;
+@ UK BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT UKM10$=UKPSI1*(UKIM/(UKE10*UKPM10));
+IDENT UKEX=(UKX10$*UKE10*UKPX10)/UKPSI2;
+IDENT UKY=UKC+UKI+UKG+UKEX-UKIM+UKSTAT+UKV1;
+IDENT UKE=UKH*GEE;   
+IDENT UKPM=UKPSI3*UKPMP;
+IDENT UKPX$=(UKE10/UKE)*UKPX;
+IDENT UKZZ=LOG(UKY)-LOG(UKYS);
+IDENT UKJMIN=UKY/UKLAM;
+IDENT UKUR=(UKL1-UKJ)/UKL1;
+@
+GENR UKLIMZ=LOG(UKIM/UKPOP);                                                  
+GENR UKLCIGZ=LOG((UKC+UKI+UKG)/UKPOP);                                        
+GENR UKLPYZZ=LOG(UKPY/    UKPM);                                              
+GENR UKLCZ=LOG(UKC/UKPOP);                                                    
+GENR UKLYZ=LOG(UKY/UKPOP);                                                    
+GENR UKLI=LOG(UKI);                                                           
+GENR UKLY=LOG(UKY);                                                           
+GENR UKLPY=LOG(UKPY);                                                         
+GENR UKLPM=LOG(UKPM);                                                         
+GENR UKPCPY=100*((UKPY/UKPY(-1))**4-1);                                       
+GENR UKRBZ=      UKRB-    UKRS(-2);                                           
+GENR UKRBZZ=     UKRB(-1)-UKRS(-2);                                           
+GENR UKRSZ=      UKRS-    UKRS(-2);                                           
+GENR UKRSZZ=     UKRS(-1)-UKRS(-2);
+GENR UKLH=LOG(UKH);                                                           
+GENR UKLH1=UKLH-UKLH(-1);                                                     
+GENR UKLHA=LOG(UKPY/GEPY)-UKLH(-1);           
+GENR UKLPXA=LOG(UKPX/(UKPW$*(UKE/UKE10)));
+GENR UKLPXB=LOG(UKPY/(UKPW$*(UKE/UKE10)));
+GENR UKLJ1=LOG(UKJ/UKJ(-1));                                                  
+GENR UKLY1=LOG(UKY/UKY(-1));                                                  
+GENR UKLEXL=LOG(UKJ/UKJMIN);                                                  
+GENR UKLL1Z=LOG(UKL1/UKPOP1);                                                 
+GENR UKLGZ=LOG(UKG/UKPOP);                                                  
+GENR UKLEXZ=LOG(UKEX/UKPOP);                                                
+GENR UKLRSZG=.25*LOG((1+UKRS/100.)/(1+GERS/100.));                          
+@
+EQ 121 UKLIMZ C UKLIMZ(-1) UKLPYZZ UKLCIGZ                                    
+ FSR C UKLGZ UKLEXZ(-1) UKLPY(-1) UKLYZ(-1) UKRB(-1) UKLIMZ(-1) UKLPYZZ(-1) 
+ UKLCIGZ(-1)                                           
+;                                                                             
+LHS UKIM=EXP(UKLIMZ)*UKPOP;                                                   
+EQ 122 UKLCZ C UKLCZ(-1) UKRB UKLYZ 
+;                                                                             
+LHS UKC=EXP(UKLCZ)*UKPOP;                                                     
+EQ 123 UKLI C UKLI(-1) UKLY UKRB(-1)                                     
+@ FSR C UKLGZ UKLEXZ(-1) UKLPY(-1) UKLYZ(-1) UKRB(-1) UKLI(-1) UKLY(-1)
+;                                                                             
+LHS UKI=EXP(UKLI);                                                            
+EQ 124 UKLPY UKLPY(-1) C T UKLPM(-1) UKZZ(-1) RHO=1                           
+ FSR C UKLGZ UKLEXZ(-1) UKLPY(-1) UKLYZ(-1) UKRB(-1) T UKLPM(-1) UKZZ(-1) 
+ UKZZ(-2) UKLPY(-2) UKLPM(-2)                                        
+;                                                                             
+LHS UKPY=EXP(UKLPY); 
+@ SPECIAL MCEURO
+@EQ 125 UKRS GERS;
+@COEF;
+@1 125 1.0
+@0
+@ END SPECIAL MCEURO
+EQ 125 UKRS C UKRS(-1) UKPCPY UKZZ USRS                                       
+ FSR C UKLGZ UKLEXZ(-1) UKLPY(-1) UKLYZ(-1) UKRB(-1) UKRS(-1) UKZZ(-1) 
+ USRS(-1) UKPCPY(-1) 
+;                                                                             
+LHS UKRS=(ABS(UKRS-.0)+UKRS-.0)/2.+.0;                                        
+@ SPECIAL MCEURO
+@EQ 126 UKRB GERB;
+@COEF;
+@1 126 1.0
+@0
+@ END SPECIAL MCEURO
+EQ 126 UKRBZ C UKRBZZ UKRSZ UKRSZZ                                            
+ FSR C UKLGZ UKLEXZ(-1) UKLPY(-1) UKLYZ(-1) UKRB(-1) UKRB(-2) UKRS(-1) 
+ UKRS(-2)                                                   
+;                                                                             
+LHS  UKRB=       UKRBZ+   UKRS(-2);                                           
+GENR UKLH1Z=UKLH1-.050*UKLHA;                                                 
+@ SPECIAL MCEURO
+@EQ 127 UKH C;
+@COEF;
+@1 127 1.0
+@0
+@ END SPECIAL MCEURO
+EQ 127 UKLH1Z C UKLRSZG 
+  FSR C UKLGZ UKLEXZ(-1) UKLPY(-1) UKLYZ(-1) UKRB(-1) UKLH1(-1) UKLHA(-1) 
+  UKLRSZG(-1)                                              
+;                                                                             
+LHS UKH=EXP(UKLH1Z+.050*UKLHA)*UKH(-1);                                       
+EQ 128  UKLPXA UKLPXB RHO=2
+;                                                  
+LHS UKPX=EXP(UKLPXA)*(UKPW$*(UKE/UKE10));                                     
+EQ 129  UKLJ1 C T UKLEXL(-1) UKLY1 
+;                                                                             
+LHS UKJ=EXP(UKLJ1)*UKJ(-1)
+;                                                   
+EQ 130  UKLL1Z C T UKLL1Z(-1) UKUR
+;                                                                             
+LHS UKL1=EXP(UKLL1Z)*UKPOP1;                                                  
+2SLS;
+ SMPL  1963.2 2017.4;
+EST 121 PLOT=8;
+ SMPL  1961.1 2017.4;
+EST 122 PLOT=8;
+ SMPL  1961.1 2017.4;
+EST 123 PLOT=8;
+ SMPL  1963.4 2017.4;
+EST 124 PLOT=8;
+ SMPL  1972.2 2016.3;
+EST 125 PLOT=8;
+ SMPL  1972.2 2016.3;
+EST 126 PLOT=8;
+ SMPL  1972.2 2016.3;
+EST 127 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 128 PLOT=8;
+ SMPL  1978.3 2017.4;
+EST 129 PLOT=8;
+ SMPL  1999.3 2017.3;
+EST 130 PLOT=8;
+END;
+@ FI BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT FIM10$=FIPSI1*(FIIM/(FIE10*FIPM10));
+IDENT FIEX=(FIX10$*FIE10*FIPX10)/FIPSI2;
+IDENT FIY=FIC+FII+FIG+FIEX-FIIM+FISTAT+FIV1;
+IDENT FIE=FIH*GEE;   
+IDENT FIPM=FIPSI3*FIPMP;
+IDENT FIPX$=(FIE10/FIE)*FIPX;
+IDENT FIZZ=LOG(FIY)-LOG(FIYS);
+IDENT FIJMIN=FIY/FILAM;
+IDENT FIUR=(FIL1-FIJ)/FIL1;
+@
+GENR FILIMZ=LOG(FIIM/FIPOP);                                                  
+GENR FILCIGZ=LOG((FIC+FII+FIG)/FIPOP);                                        
+GENR FILPYZZ=LOG(FIPY/    FIPM);                                              
+GENR FILCZ=LOG(FIC/FIPOP);                                                    
+GENR FILYZ=LOG(FIY/FIPOP);                                                    
+GENR FILI=LOG(FII);                                                           
+GENR FILY=LOG(FIY);                                                           
+GENR FILPY=LOG(FIPY);                                                         
+GENR FILPM=LOG(FIPM);                                                         
+GENR FIPCPY=100*((FIPY/FIPY(-1))**4-1);                                       
+GENR FIRBZ=      FIRB-    FIRS(-2);                                           
+GENR FIRBZZ=     FIRB(-1)-FIRS(-2);                                           
+GENR FIRSZ=      FIRS-    FIRS(-2);                                           
+GENR FIRSZZ=     FIRS(-1)-FIRS(-2);
+GENR FILH=LOG(FIH);                                                           
+GENR FILH1=FILH-FILH(-1);                                                     
+GENR FILHA=LOG(FIPY/GEPY)-FILH(-1);           
+GENR FILPXA=LOG(FIPX/(FIPW$*(FIE/FIE10)));
+GENR FILPXB=LOG(FIPY/(FIPW$*(FIE/FIE10)));
+GENR FILJ1=LOG(FIJ/FIJ(-1));                                                  
+GENR FILY1=LOG(FIY/FIY(-1));                                                  
+GENR FILEXL=LOG(FIJ/FIJMIN);                                                  
+GENR FILL1Z=LOG(FIL1/FIPOP1);                                                 
+GENR FILGZ=LOG(FIG/FIPOP);                                                  
+GENR FILEXZ=LOG(FIEX/FIPOP);                                                
+GENR FILRSZG=.25*LOG((1+FIRS/100.)/(1+GERS/100.));
+@
+EQ 131 FILIMZ C FILIMZ(-1) FILCIGZ FILPYZZ                                    
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1)  FILIMZ(-1) FILPYZZ(-1) FILCIGZ(-1)
+;                                                                             
+LHS FIIM=EXP(FILIMZ)*FIPOP;                                                   
+EQ 132 FILCZ C FILCZ(-1) FIRS FILYZ                                           
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1) FILCZ(-1) FIRS(-1)
+;                                                                             
+LHS FIC=EXP(FILCZ)*FIPOP;                                                     
+EQ 134 FILPY FILPY(-1) C T FILPM  FIZZ
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1) FIRS(-1) FILPM(-1) T FIZZ(-1)
+;                                                                             
+LHS FIPY=EXP(FILPY);                                                          
+EQ 135 FIRS C FIRS(-1)  FIZZ                                                 
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1) FIRS(-1) FIZZ(-1)
+;                                                                             
+LHS FIRS=(1-EU1)*FIRS+EU1*EURS;                                            
+EQ 137 FILH1 C FILHA FILRSZG RHO=1                                            
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1) FIRS(-1) FILH1(-1) FILHA(-1) 
+ FILRSZG(-1)                                              
+;                                                                             
+LHS FIH=(1-EU1)*(EXP(FILH1)*FIH(-1))+EU1*1;                                   
+EQ 138  FILPXA FILPXB RHO=2
+;                                                  
+LHS FIPX=EXP(FILPXA)*(FIPW$*(FIE/FIE10));                                     
+EQ 139  FILJ1 C T FILEXL(-1) FILY1                                            
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1) FIRS(-1) FILJ1(-1) T FILEXL(-1) 
+ FILEXL(-2) FILY1(-1)                                  
+;                                                                             
+LHS FIJ=EXP(FILJ1)*FIJ(-1);                                                   
+EQ 140  FILL1Z C T FILL1Z(-1) FIUR                                            
+ FSR C FILGZ FILEXZ(-1) FILPY(-1) FILYZ(-1) FIRS(-1) FILL1Z(-1) T FIUR(-1) 
+;                                                                             
+LHS FIL1=EXP(FILL1Z)*FIPOP1;                                                  
+2SLS;
+ SMPL  1961.1 2017.4;
+EST 131 PLOT=8;
+ SMPL  1978.2 2017.1;
+EST 132 PLOT=8;
+ SMPL  1978.2 2017.2;
+EST 134 PLOT=8;
+ SMPL  1979.1 1998.4;
+EST 135 PLOT=8;
+ SMPL  1978.3 1998.4;
+EST 137 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 138 PLOT=8;
+ SMPL  1978.2 2017.2;
+EST 139 PLOT=8;
+ SMPL  2000.2 2017.2;
+EST 140 PLOT=8;
+END;
+@ AS BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT ASM10$=ASPSI1*(ASIM/(ASE10*ASPM10));
+IDENT ASEX=(ASX10$*ASE10*ASPX10)/ASPSI2;
+IDENT ASY=ASC+ASI+ASG+ASEX-ASIM+ASSTAT+ASV1;
+IDENT ASH=ASE/GEE;
+IDENT ASPM=ASPSI3*ASPMP;
+IDENT ASPX$=(ASE10/ASE)*ASPX;
+IDENT ASZZ=LOG(ASY)-LOG(ASYS);
+IDENT ASJMIN=ASY/ASLAM;
+IDENT ASUR=(ASL1-ASJ)/ASL1;
+@
+GENR ASLIMZ=LOG(ASIM/ASPOP);                                                  
+GENR ASLCIGZ=LOG((ASC+ASI+ASG)/ASPOP);                                        
+GENR ASLPYZZ=LOG(ASPY/    ASPM);                                              
+GENR ASLCZ=LOG(ASC/ASPOP);                                                    
+GENR ASLYZ=LOG(ASY/ASPOP);                                                    
+GENR ASLI=LOG(ASI);                                                           
+GENR ASLY=LOG(ASY);                                                           
+GENR ASLPY=LOG(ASPY);                                                         
+GENR ASLPM=LOG(ASPM);                                                         
+GENR ASPCPY=100*((ASPY/ASPY(-1))**4-1);                                       
+GENR ASRBZ=      ASRB-    ASRS(-2);                                           
+GENR ASRBZZ=     ASRB(-1)-ASRS(-2);                                           
+GENR ASRSZ=      ASRS-    ASRS(-2);                                           
+GENR ASRSZZ=     ASRS(-1)-ASRS(-2);
+GENR ASLE=LOG(ASE);                                                           
+GENR ASLE1=ASLE-ASLE(-1);                                                     
+GENR ASLEA=LOG(ASPY/USPY)-ASLE(-1);           
+GENR ASLPXA=LOG(ASPX/(ASPW$*(ASE/ASE10)));
+GENR ASLPXB=LOG(ASPY/(ASPW$*(ASE/ASE10)));
+GENR ASLJ1=LOG(ASJ/ASJ(-1));                                                  
+GENR ASLY1=LOG(ASY/ASY(-1));                                                  
+GENR ASLEXL=LOG(ASJ/ASJMIN);                                                  
+GENR ASLL1Z=LOG(ASL1/ASPOP1);                                                 
+GENR ASLGZ=LOG(ASG/ASPOP);                                                  
+GENR ASLEXZ=LOG(ASEX/ASPOP);                                                
+@
+EQ 141 ASLIMZ C ASLIMZ(-1) ASLPYZZ ASLCIGZ                                    
+ FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASLIMZ(-1) ASLPYZZ(-1) 
+ ASLCIGZ(-1) ASLIMZ(-2)                                
+;                                                                             
+LHS ASIM=EXP(ASLIMZ)*ASPOP;                                                   
+EQ 142 ASLCZ C ASLCZ(-1) ASLYZ                                           
+ FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASLCZ(-1)  
+;                                                                             
+LHS ASC=EXP(ASLCZ)*ASPOP;                                                     
+EQ 143 ASLI C ASLI(-1) ASLY ASRB(-1)
+  FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASLI(-1) ASLY(-1)
+;                                                                             
+LHS ASI=EXP(ASLI);                                                            
+EQ 144 ASLPY ASLPY(-1) C T ASZZ(-1) RHO=1 
+;                                                                             
+LHS ASPY=EXP(ASLPY);                                                          
+EQ 145 ASRS C ASRS(-1) ASPCPY ASZZ USRS                                       
+ FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASRS(-1) ASZZ(-1) USRS(-1)
+ ASLPY(-2)                                         
+;                                                                             
+LHS ASRS=(ABS(ASRS-.0)+ASRS-.0)/2.+.0;                                        
+EQ 146 ASRBZ C ASRBZZ ASRSZ ASRSZZ                                            
+ FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASRB(-2) ASRS(-1) ASRS(-2)
+;                                                                             
+LHS  ASRB=       ASRBZ+   ASRS(-2);                                           
+EQ 147 ASLE1 C ASLEA RHO=1                                                    
+ FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASLE1(-1) ASLEA(-1)
+;                                                                             
+EQ 148  ASLPXA ASLPXB RHO=2
+;                                                  
+LHS ASPX=EXP(ASLPXA)*(ASPW$*(ASE/ASE10));                                     
+LHS ASE=EXP(ASLE1)*ASE(-1);                                                   
+EQ 149  ASLJ1 C T ASLEXL(-1) ASLY1 RHO=1                                      
+;                                                                             
+LHS ASJ=EXP(ASLJ1)*ASJ(-1);                                                   
+EQ 150  ASLL1Z C T ASLL1Z(-1) ASUR                                            
+ FSR C ASLGZ ASLEXZ(-1) ASLPY(-1) ASLYZ(-1) ASRB(-1) ASLL1Z(-1) T ASUR(-1)
+;                                                                             
+LHS ASL1=EXP(ASLL1Z)*ASPOP1;                                                  
+2SLS;
+ SMPL  1969.4 2017.4;
+EST 141 PLOT=8;
+ SMPL  1969.4 2017.4;
+EST 142 PLOT=8;
+ SMPL  1969.4 2017.4;
+EST 143 PLOT=8;
+ SMPL  1970.1 2017.4;
+EST 144 PLOT=8;
+ SMPL  1976.4 2017.4;
+EST 145 PLOT=8;
+ SMPL  1977.1 2017.4;
+EST 146 PLOT=8;
+ SMPL  1972.2 2017.4;
+EST 147 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 148 PLOT=8;
+ SMPL  1967.4 2017.4;
+EST 149 PLOT=8;
+ SMPL  1978.2 2017.4;
+EST 150 PLOT=8;
+END;
+@ SO BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT SOM10$=SOPSI1*(SOIM/(SOE10*SOPM10));
+IDENT SOEX=(SOX10$*SOE10*SOPX10)/SOPSI2;
+IDENT SOY=SOC+SOI+SOG+SOEX-SOIM+SOSTAT+SOV1;
+IDENT SOH=SOE/GEE;
+IDENT SOPM=SOPSI3*SOPMP;
+IDENT SOPX$=(SOE10/SOE)*SOPX;
+IDENT SOZZ=LOG(SOY)-LOG(SOYS);
+IDENT SOJMIN=SOY/SOLAM;
+IDENT SOUR=(SOL1-SOJ)/SOL1;
+@
+GENR SOLIMZ=LOG(SOIM/SOPOP);                                                  
+GENR SOLCIGZ=LOG((SOC+SOI+SOG)/SOPOP);                                        
+GENR SOLPYZZ=LOG(SOPY/    SOPM);                                              
+GENR SOLCZ=LOG(SOC/SOPOP);                                                    
+GENR SOLYZ=LOG(SOY/SOPOP);                                                    
+GENR SOLI=LOG(SOI);                                                           
+GENR SOLY=LOG(SOY);                                                           
+GENR SOLPY=LOG(SOPY);                                                         
+GENR SOLPM=LOG(SOPM);                                                         
+GENR SOPCPY=100*((SOPY/SOPY(-1))**4-1);                                       
+GENR SORBZ=      SORB-    SORS(-2);                                           
+GENR SORBZZ=     SORB(-1)-SORS(-2);                                           
+GENR SORSZ=      SORS-    SORS(-2);                                           
+GENR SORSZZ=     SORS(-1)-SORS(-2);
+GENR SOLE=LOG(SOE);                                                           
+GENR SOLE1=SOLE-SOLE(-1);                                                     
+GENR SOLEA=LOG(SOPY/USPY)-SOLE(-1);           
+GENR SOLPXA=LOG(SOPX/(SOPW$*(SOE/SOE10)));
+GENR SOLPXB=LOG(SOPY/(SOPW$*(SOE/SOE10)));
+GENR SOLGZ=LOG(SOG/SOPOP);                                                  
+GENR SOLEXZ=LOG(SOEX/SOPOP);                                                
+@
+EQ 151 SOLIMZ C SOLIMZ(-1) SOLCIGZ 
+;                                   
+LHS SOIM=EXP(SOLIMZ)*SOPOP;                                                   
+EQ 152 SOLCZ C SOLCZ(-1) SORS(-1) SOLYZ                                       
+;                                                                             
+LHS SOC=EXP(SOLCZ)*SOPOP;                                                     
+EQ 153 SOLI C SOLI(-1) SOLY SORB(-1)                                          
+ FSR C SOLGZ SOLEXZ(-1) SOLPY(-1) SOLYZ(-1) SORB(-1) SOLI(-1) SOLY(-1)
+;                                                                             
+LHS SOI=EXP(SOLI);                                                            
+EQ 155 SORS C SORS(-1) USRS RHO=1                                             
+ FSR C SOLGZ SOLEXZ(-1) SOLPY(-1) SOLYZ(-1) SORB(-1) SORS(-1) SORS(-2) 
+ USRS(-1)                                                  
+;                                                                             
+LHS SORS=(ABS(SORS-.0)+SORS-.0)/2.+.0;                                        
+EQ 156 SORBZ C SORBZZ SORSZ SORSZZ                                            
+ FSR C SOLGZ SOLEXZ(-1) SOLPY(-1) SOLYZ(-1) SORB(-1) SORB(-2) SORS(-1) SORS(-2)
+;                                                                             
+LHS  SORB=       SORBZ+   SORS(-2);                                           
+2SLS;
+ SMPL  1961.1 2016.4;
+EST 151 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 152 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 153 PLOT=8;
+ SMPL  1972.2 2016.4;
+EST 155 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 156 PLOT=8;
+END;
+@ KO BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT KOM10$=KOPSI1*(KOIM/(KOE10*KOPM10));
+IDENT KOEX=(KOX10$*KOE10*KOPX10)/KOPSI2;
+IDENT KOY=KOC+KOI+KOG+KOEX-KOIM+KOSTAT+KOV1;
+IDENT KOH=KOE/GEE;
+IDENT KOPM=KOPSI3*KOPMP;
+IDENT KOPX$=(KOE10/KOE)*KOPX;
+IDENT KOZZ=LOG(KOY)-LOG(KOYS);
+IDENT KOJMIN=KOY/KOLAM;
+IDENT KOUR=(KOL1-KOJ)/KOL1;
+@
+GENR KOLIMZ=LOG(KOIM/KOPOP);                                                  
+GENR KOLCIGZ=LOG((KOC+KOI+KOG)/KOPOP);                                        
+GENR KOLPYZZ=LOG(KOPY/    KOPM);                                              
+GENR KOLCZ=LOG(KOC/KOPOP);                                                    
+GENR KOLYZ=LOG(KOY/KOPOP);                                                    
+GENR KOLI=LOG(KOI);                                                           
+GENR KOLY=LOG(KOY);                                                           
+GENR KOLPY=LOG(KOPY);                                                         
+GENR KOLPM=LOG(KOPM);                                                         
+GENR KOPCPY=100*((KOPY/KOPY(-1))**4-1);                                       
+GENR KORBZ=      KORB-    KORS(-2);                                           
+GENR KORBZZ=     KORB(-1)-KORS(-2);                                           
+GENR KORSZ=      KORS-    KORS(-2);                                           
+GENR KORSZZ=     KORS(-1)-KORS(-2);
+GENR KOLE=LOG(KOE);                                                           
+GENR KOLE1=KOLE-KOLE(-1);                                                     
+GENR KOLEA=LOG(KOPY/USPY)-KOLE(-1);           
+GENR KOLPXA=LOG(KOPX/(KOPW$*(KOE/KOE10)));
+GENR KOLPXB=LOG(KOPY/(KOPW$*(KOE/KOE10)));
+GENR KOLGZ=LOG(KOG/KOPOP);                                                  
+GENR KOLEXZ=LOG(KOEX/KOPOP);                                                
+@
+EQ 161 KOLIMZ C KOLIMZ(-1) KOLCIGZ 
+;                                          
+LHS KOIM=EXP(KOLIMZ)*KOPOP;                                                   
+EQ 162 KOLCZ C KOLCZ(-1) KOLYZ KORB(-1)                                  
+ FSR C KOLGZ KOLEXZ(-1) KOLPY(-1) KOLYZ(-1) KORB(-1) KOLCZ(-1)
+;                                                                             
+LHS KOC=EXP(KOLCZ)*KOPOP;                                                     
+EQ 163 KOLI C KOLI(-1) KOLY KORB(-1)                                     
+;                                                                             
+LHS KOI=EXP(KOLI);                                                            
+EQ 164 KOLPY KOLPY(-1) C T KOZZ(-1)                                           
+ FSR C KOLGZ KOLEXZ(-1) KOLPY(-1) KOLYZ(-1) KORB(-1) KOLPY(-2) T KOLPM(-1) 
+ KOZZ(-1) KOZZ(-2)                                                            
+;                                                                             
+LHS KOPY=EXP(KOLPY);                                                          
+EQ 166 KORBZ C KORBZZ KORSZ KORSZZ                                            
+ FSR C KOLGZ KOLEXZ(-1) KOLPY(-1) KOLYZ(-1) KORB(-1) KORB(-2) KORS(-1) KORS(-2)
+;                                                                             
+LHS  KORB=       KORBZ+   KORS(-2);                                           
+EQ 167 KOLE1 C KOLEA RHO=1                                                    
+ FSR C KOLGZ KOLEXZ(-1) KOLPY(-1) KOLYZ(-1) KORB(-1) KOLE1(-1) KOLEA(-1)
+;                                                                             
+EQ 168  KOLPXA KOLPXB RHO=2
+;                                                  
+LHS KOPX=EXP(KOLPXA)*(KOPW$*(KOE/KOE10));                                     
+LHS KOE=EXP(KOLE1)*KOE(-1);                                                   
+2SLS;
+ SMPL  1961.1 2017.2;
+EST 161 PLOT=8;
+ SMPL  1973.4 2017.2;
+EST 162 PLOT=8;
+ SMPL  1973.4 2017.2;
+EST 163 PLOT=8;
+ SMPL  1973.4 2017.2;
+EST 164 PLOT=8;
+ SMPL  1977.2 2017.2;
+EST 166 PLOT=8;
+ SMPL  1974.1 2017.2;
+EST 167 PLOT=8;
+ SMPL  1961.1 2016.4;
+EST 168 PLOT=8;
+END;
+@
+SMPL 1960.1 2017.4;
+GENR EUY=EU1*(GEY+AUY/(AUE10/GEE10)+FRY/(FRE10/GEE10)+ITY/(ITE10/GEE10)      
+ +NEY/(NEE10/GEE10)+FIY/(FIE10/GEE10))+(1-EU1)*GEY                            
+;                                                                             
+GENR EUYS=EU1*(GEYS+AUYS/(AUE10/GEE10)+FRYS/(FRE10/GEE10)+ITYS/(ITE10/GEE10) 
+ +NEYS/(NEE10/GEE10)+FIYS/(FIE10/GEE10))+(1-EU1)*GEYS                         
+;                                                                             
+GENR EUYY=EU1*(GEPY*GEY+(AUPY*AUY)/AUH+(FRPY*FRY)/FRH+(ITPY*ITY)/ITH         
+ +(NEPY*NEY)/NEH+(FIPY*FIY)/FIH)+(1-EU1)*GEPY*GEY                             
+;                                                                             
+GENR EUPOP=GEPOP+AUPOP+FRPOP+ITPOP+NEPOP+FIPOP
+;
+GENR EUPY=EUYY/EUY;                                                          
+GENR EUZZ=LOG(EUY)-LOG(EUYS);                                                
+GENR EULPY=LOG(EUPY);                                                         
+GENR EULYZ=LOG(EUY/EUPOP);                                                    
+GENR EULE=LOG(EUE);                                                           
+GENR EUPCPY=100*((EUPY/EUPY(-1))**4-1);                                       
+GENR EULRSZ=.25*LOG((1+EURS/100.)/(1+USRS/100.));                             
+GENR EULPYZ=LOG(EUPY/USPY);                                                   
+GENR EURBZ=      EURB-    EURS(-2);                                           
+GENR EURBZZ=     EURB(-1)-EURS(-2);                                           
+GENR EURSZ=      EURS-    EURS(-2);                                           
+GENR EURSZZ=     EURS(-1)-EURS(-2);                                           
+GENR EULE1=EULE-EULE(-1);                                                     
+GENR EULEA=EULPYZ-EULE(-1);                                                   
+EQ 175 EURS C EURS(-1) EUZZ USRS EUPCPY(-1)                                   
+ FSR C EULPY(-1) EULYZ(-1) EURB(-1) EURS(-1) EUZZ(-1) USRS(-1) EUPCPY(-1)
+;                                                                             
+LHS EURS=(ABS(EURS-.0)+EURS-.0)/2.+.0;                                        
+EQ 176 EURBZ C EURBZZ EURSZ EURSZZ                                            
+ FSR C EULPY(-1) EULYZ(-1) EURB(-1) EURB(-2) EURS(-1) EURS(-2) EUZZ(-1) 
+ USRS(-1) EUPCPY(-1)                                                 
+;                                                                             
+LHS  EURB=       EURBZ+   EURS(-2);                                           
+EQ 177 EULE1 C EULEA EULRSZ RHO=1                                             
+ FSR C EULPY(-1) EULYZ(-1) EURB(-1) EULE1(-1) EULEA(-1) EULRSZ(-1)
+;                                                                             
+LHS  EUE=EXP(EULE1)*EUE(-1);                                                  
+2SLS;
+ SMPL 1972.2 2017.4;
+EST 175 PLOT=8;
+ SMPL 1961.1 2017.4;
+EST 176 PLOT=8;
+ SMPL 1972.2 2017.4;
+EST 177 PLOT=8;
+END;
+@
+@ BE BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT BEM10$=BEPSI1*(BEIM/(BEE10*BEPM10));
+IDENT BEEX=(BEX10$*BEE10*BEPX10)/BEPSI2;
+IDENT BEY=BEC+BEI+BEG+BEEX-BEIM+BESTAT+BEV1;
+IDENT BEE=BEH*GEEA;  
+IDENT BEPM=BEPSI3*BEPMP;
+IDENT BEPX$=(BEE10/BEE)*BEPX;
+IDENT BEZZ=LOG(BEY)-LOG(BEYS);
+IDENT BEJMIN=BEY/BELAM;
+IDENT BEUR=(BEL1-BEJ)/BEL1;
+@
+GENR BELIMZ=LOG(BEIM/BEPOP);                                                  
+GENR BELCIGZ=LOG((BEC+BEI+BEG)/BEPOP);                                        
+GENR BELPYZZ=LOG(BEPY/    BEPM);                                              
+GENR BELCZ=LOG(BEC/BEPOP);                                                    
+GENR BELYZ=LOG(BEY/BEPOP);                                                    
+GENR BELI=LOG(BEI);                                                           
+GENR BELY=LOG(BEY);                                                           
+GENR BELPY=LOG(BEPY);                                                         
+GENR BELPM=LOG(BEPM);                                                         
+GENR BEPCPY=100*((BEPY/BEPY(-4))**1-1);                                       
+GENR BERBZ=      BERB-    BERS(-4);                                           
+GENR BERBZZ=     BERB(-4)-BERS(-4);                                           
+GENR BERSZ=      BERS-    BERS(-4);                                           
+GENR BELH=LOG(BEH);                                                           
+GENR BELH1=BELH-BELH(-4);                                                     
+GENR BELHA=LOG(BEPY/GEPYA)-BELH(-4);           
+GENR BELPXA=LOG(BEPX/(BEPW$*(BEE/BEE10)));
+GENR BELPXB=LOG(BEPY/(BEPW$*(BEE/BEE10)));
+GENR BELJ1=LOG(BEJ/BEJ(-4));                                                  
+GENR BELY1=LOG(BEY/BEY(-4));                                                  
+GENR BELEXL=LOG(BEJ/BEJMIN);                                                  
+GENR BELL1Z=LOG(BEL1/BEPOP1);                                                 
+GENR BELGZ=LOG(BEG/BEPOP);                                                  
+GENR BELEXZ=LOG(BEEX/BEPOP);                                                
+@
+EQ 181 BELIMZ C BELIMZ(-4) BELPYZZ BELCIGZ                                    
+ FSR C BELGZ BELEXZ(-4) BELPY(-4) BELYZ(-4) BERB(-4)                          
+ BELIMZ(-4) BELPYZZ(-4) BELCIGZ(-4)
+;                                                                             
+LHS BEIM=EXP(BELIMZ)*BEPOP;                                                   
+EQ 182 BELCZ C BELCZ(-4) BELYZ                                                
+ FSR C BELGZ BELEXZ(-4) BELPY(-4) BELYZ(-4) BERB(-4)  BELCZ(-4)
+;
+LHS BEC=EXP(BELCZ)*BEPOP;                                                     
+EQ 183 BELI C BELI(-4) BELY BERB                                              
+ FSR C BELGZ BELEXZ(-4) BELPY(-4) BELYZ(-4) BERB(-4)  BELI(-4) BELY(-4)
+;
+LHS BEI=EXP(BELI);                                                            
+EQ 184 BELPY BELPY(-4) C BET BELPM BEZZ(-4)
+;
+LHS BEPY=EXP(BELPY);                                                          
+EQ 185 BERS C BERS(-4) GERSA  BEPCPY BEZZ 
+;
+LHS BERS=(1-EU1)*BERS+EU1*EURSA;                                           
+EQ 186 BERBZ C BERBZZ BERSZ 
+;                                                 
+LHS  BERB=  (1-EU1)*(BERBZ+   BERS(-4))+EU1*EURBA;                          
+EQ 187 BELH1 C BELHA                                                          
+;                                                                             
+LHS BEH=(1-EU1)*(EXP(BELH1)*BEH(-4))+EU1*1;                                   
+@@EQ 188 BELPXA BELPXB RHO=2
+@@;                                                  
+EQ 188  BELPXA;                                                               
+NLEQ BELPXA=COEF(1,188)*(BELPXB-COEF(2,188)*BELPXB(-4)-COEF(3,188)*BELPXB(-8))
+ +COEF(2,188)*BELPXA(-4)+COEF(3,188)*BELPXA(-8);                              
+LHS BEPX=EXP(BELPXA)*(BEPW$*(BEE/BEE10));                                     
+EQ 189  BELJ1 C BET BELEXL(-4) BELY1 
+;                                         
+LHS BEJ=EXP(BELJ1)*BEJ(-4);                                                   
+EQ 190  BELL1Z C BET BELL1Z(-4) BEUR(-4)
+;                                         
+LHS BEL1=EXP(BELL1Z)*BEPOP1;                                                  
+2SLS;
+ SMPL  1972.1  2017.4 ;
+EST 181 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 182 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 183 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 184 PLOT=8;
+ SMPL  1972.1  1998.4 ;
+EST 185 PLOT=8;
+ SMPL  1972.1  1998.4 ;
+EST 186 PLOT=8;
+ SMPL  1972.1  1998.4 ;
+EST 187 PLOT=8;
+@ SMPL  1972.1  2016.4 ;
+@EST 188 PLOT=8;
+ SMPL  1985.1  2016.4 ;
+EST 189 PLOT=8;
+ SMPL  1985.1  2016.4 ;
+EST 190 PLOT=8;
+END;
+@ DE BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT DEM10$=DEPSI1*(DEIM/(DEE10*DEPM10));
+IDENT DEEX=(DEX10$*DEE10*DEPX10)/DEPSI2;
+IDENT DEY=DEC+DEI+DEG+DEEX-DEIM+DESTAT+DEV1;
+IDENT DEE=DEH*GEEA;  
+IDENT DEPM=DEPSI3*DEPMP;
+IDENT DEPX$=(DEE10/DEE)*DEPX;
+IDENT DEZZ=LOG(DEY)-LOG(DEYS);
+IDENT DEJMIN=DEY/DELAM;
+IDENT DEUR=(DEL1-DEJ)/DEL1;
+@
+GENR DELIMZ=LOG(DEIM/DEPOP);                                                  
+GENR DELCIGZ=LOG((DEC+DEI+DEG)/DEPOP);                                        
+GENR DELPYZZ=LOG(DEPY/    DEPM);                                              
+GENR DELCZ=LOG(DEC/DEPOP);                                                    
+GENR DELYZ=LOG(DEY/DEPOP);                                                    
+GENR DELI=LOG(DEI);                                                           
+GENR DELY=LOG(DEY);                                                           
+GENR DELPY=LOG(DEPY);                                                         
+GENR DELPM=LOG(DEPM);                                                         
+GENR DEPCPY=100*((DEPY/DEPY(-4))**1-1);                                       
+GENR DERBZ=      DERB-    DERS(-4);                                           
+GENR DERBZZ=     DERB(-4)-DERS(-4);                                           
+GENR DERSZ=      DERS-    DERS(-4);                                           
+GENR DELHH=LOG(DEH);                                                           
+GENR DELH1=DELHH-DELHH(-4);                                                     
+GENR DELHA=LOG(DEPY/GEPYA)-DELHH(-4);           
+GENR DELPXA=LOG(DEPX/(DEPW$*(DEE/DEE10)));
+GENR DELPXB=LOG(DEPY/(DEPW$*(DEE/DEE10)));
+GENR DELJ1=LOG(DEJ/DEJ(-4));                                                  
+GENR DELY1=LOG(DEY/DEY(-4));                                                  
+GENR DELEXL=LOG(DEJ/DEJMIN);                                                  
+GENR DELL1Z=LOG(DEL1/DEPOP1);                                                 
+GENR DELGZ=LOG(DEG/DEPOP);                                                  
+GENR DELEXZ=LOG(DEEX/DEPOP);                                                
+@
+EQ 191 DELIMZ C DELIMZ(-4) DELCIGZ DELPYZZ                                    
+ FSR C DELGZ DELEXZ(-4) DELPY(-4) DELYZ(-4) DERS(-4)                          
+ DELIMZ(-4) DELPYZZ(-4) DELCIGZ(-4)                                           
+;                                                                             
+LHS DEIM=EXP(DELIMZ)*DEPOP;                                                   
+EQ 192 DELCZ C DELCZ(-4) DELYZ DERS
+ FSR C DELGZ DELEXZ(-4) DELPY(-4) DELYZ(-4) DERS(-4) DELCZ(-4) 
+;                                                                             
+LHS DEC=EXP(DELCZ)*DEPOP;                                                     
+EQ 193 DELI C DELI(-4) DELY DERS                                              
+ FSR C DELGZ DELEXZ(-4) DELPY(-4) DELYZ(-4) DERS(-4) DELI(-4) DELY(-4) 
+;
+LHS DEI=EXP(DELI);                                                            
+
+EQ 194 DELPY DELPY(-4) C BET DELPM 
+;
+LHS DEPY=EXP(DELPY);                                                          
+EQ 195 DERS C DERS(-4) GERSA DEZZ DEPCPY 
+;
+LHS DERS=(ABS(DERS-.0)+DERS-.0)/2.+.0;                                        
+EQ 196 DERBZ C DERBZZ DERSZ ;                                                 
+LHS  DERB=       DERBZ+   DERS(-4);                                           
+GENR DELH1Z=DELH1-.050*DELHA;                                                 
+EQ 197 DELH1Z C 
+;                                                                             
+LHS DEH=EXP(DELH1Z+.050*DELHA)*DEH(-4);                                       
+@@EQ 198 DELPXA DELPXB RHO=2
+@@;                                                  
+EQ 198  DELPXA;                                                               
+NLEQ DELPXA=COEF(1,198)*(DELPXB-COEF(2,198)*DELPXB(-4)-COEF(3,198)*DELPXB(-8))
+ +COEF(2,198)*DELPXA(-4)+COEF(3,198)*DELPXA(-8);                              
+LHS DEPX=EXP(DELPXA)*(DEPW$*(DEE/DEE10));                                     
+EQ 199  DELJ1 C BET DELEXL(-4) DELY1 
+;                                         
+LHS DEJ=EXP(DELJ1)*DEJ(-4);                                                   
+2SLS;
+ SMPL  1973.1  2017.4 ;
+EST 191 PLOT=8;
+ SMPL  1973.1  2017.4 ;
+EST 192 PLOT=8;
+ SMPL  1973.1  2017.4 ;
+EST 193 PLOT=8;
+ SMPL  1973.1  2017.4 ;
+EST 194 PLOT=8;
+ SMPL  1973.1  2017.4 ;
+EST 195 PLOT=8;
+ SMPL  1985.1  2017.4 ;
+EST 196 PLOT=8;
+ SMPL  1973.1  2017.4 ;
+EST 197 PLOT=8;
+@ SMPL  1972.1  2016.4 ;
+@EST 198 PLOT=8;
+ SMPL  1985.1  2016.4 ;
+EST 199 PLOT=8;
+END; 
+@ NO BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT NOM10$=NOPSI1*(NOIM/(NOE10*NOPM10));
+IDENT NOEX=(NOX10$*NOE10*NOPX10)/NOPSI2;
+IDENT NOY=NOC+NOI+NOG+NOEX-NOIM+NOSTAT+NOV1;
+IDENT NOE=NOH*GEEA;  
+IDENT NOPM=NOPSI3*NOPMP;
+IDENT NOPX$=(NOE10/NOE)*NOPX;
+IDENT NOZZ=LOG(NOY)-LOG(NOYS);
+IDENT NOJMIN=NOY/NOLAM;
+IDENT NOUR=(NOL1-NOJ)/NOL1;
+@
+GENR NOLIMZ=LOG(NOIM/NOPOP);                                                  
+GENR NOLCIGZ=LOG((NOC+NOI+NOG)/NOPOP);                                        
+GENR NOLPYZZ=LOG(NOPY/    NOPM);                                              
+GENR NOLCZ=LOG(NOC/NOPOP);                                                    
+GENR NOLYZ=LOG(NOY/NOPOP);                                                    
+GENR NOLI=LOG(NOI);                                                           
+GENR NOLY=LOG(NOY);                                                           
+GENR NOLPY=LOG(NOPY);                                                         
+GENR NOLPM=LOG(NOPM);                                                         
+GENR NOPCPY=100*((NOPY/NOPY(-4))**1-1);                                       
+GENR NORBZ=      NORB-    NORS(-4);                                           
+GENR NORBZZ=     NORB(-4)-NORS(-4);                                           
+GENR NORSZ=      NORS-    NORS(-4);                                           
+GENR NOLH=LOG(NOH);                                                           
+GENR NOLH1=NOLH-NOLH(-4);                                                     
+GENR NOLHA=LOG(NOPY/GEPYA)-NOLH(-4);           
+GENR NOLPXA=LOG(NOPX/(NOPW$*(NOE/NOE10)));
+GENR NOLPXB=LOG(NOPY/(NOPW$*(NOE/NOE10)));
+GENR NOLJ1=LOG(NOJ/NOJ(-4));                                                  
+GENR NOLY1=LOG(NOY/NOY(-4));                                                  
+GENR NOLEXL=LOG(NOJ/NOJMIN);                                                  
+GENR NOLL1Z=LOG(NOL1/NOPOP1);                                                 
+GENR NOLGZ=LOG(NOG/NOPOP);                                                  
+GENR NOLEXZ=LOG(NOEX/NOPOP);                                                
+@
+EQ 201 NOLIMZ C NOLIMZ(-4) NOLPYZZ NOLCIGZ                                    
+ FSR C NOLGZ NOLEXZ(-4) NOLPY(-4) NOLYZ(-4) NORB(-4)                      
+ NOLIMZ(-4) NOLPYZZ(-4) NOLCIGZ(-4)                                           
+;                                                                             
+LHS NOIM=EXP(NOLIMZ)*NOPOP;                                                   
+EQ 202 NOLCZ C NOLCZ(-4) NOLYZ NORS 
+ FSR C NOLGZ NOLEXZ(-4) NOLPY(-4) NOLYZ(-4) NORB(-4) NOLCZ(-4) NORS(-4)
+;                                                                             
+LHS NOC=EXP(NOLCZ)*NOPOP;                                                     
+EQ 203 NOLI C NOLI(-4) NOLY  NORS                                             
+ FSR C NOLGZ NOLEXZ(-4) NOLPY(-4) NOLYZ(-4) NORB(-4) NOLI(-4) NORS(-4) NOLY(-4)
+;                                                                             
+LHS NOI=EXP(NOLI);                                                            
+EQ 204 NOLPY NOLPY(-4) C BET NOLPM  NOZZ(-4)
+;                                                       
+LHS NOPY=EXP(NOLPY);                                                          
+EQ 205 NORS C NORS(-4) GERSA   NOZZ
+;                                                                             
+LHS NORS=(ABS(NORS-.0)+NORS-.0)/2.+.0;                                        
+EQ 206 NORBZ C NORBZZ NORSZ 
+;                                                 
+LHS  NORB=       NORBZ+   NORS(-4);                                           
+GENR NOLH1Z=NOLH1-.050*NOLHA;                                                 
+EQ 207 NOLH1Z C 
+;  
+LHS NOH=EXP(NOLH1Z+.050*NOLHA)*NOH(-4);                                       
+EQ 209  NOLJ1 C BET NOLEXL(-4) NOLY1 
+;                                         
+LHS NOJ=EXP(NOLJ1)*NOJ(-4);                                                   
+EQ 210  NOLL1Z C BET NOLL1Z(-4) NOUR 
+;                                         
+LHS NOL1=EXP(NOLL1Z)*NOPOP1;                                                  
+2SLS;
+ SMPL  1972.1  2016.4 ;
+EST 201 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 202 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 203 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 204 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 205 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 206 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 207 PLOT=8;
+ SMPL  1974.1  2016.4 ;
+EST 209 PLOT=8;
+ SMPL  1974.1  2016.4 ;
+EST 210 PLOT=8;
+END; 
+@ SW BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT SWM10$=SWPSI1*(SWIM/(SWE10*SWPM10));
+IDENT SWEX=(SWX10$*SWE10*SWPX10)/SWPSI2;
+IDENT SWY=SWC+SWI+SWG+SWEX-SWIM+SWSTAT+SWV1;
+IDENT SWE=SWH*GEEA;  
+IDENT SWPM=SWPSI3*SWPMP;
+IDENT SWPX$=(SWE10/SWE)*SWPX;
+IDENT SWZZ=LOG(SWY)-LOG(SWYS);
+IDENT SWJMIN=SWY/SWLAM;
+IDENT SWUR=(SWL1-SWJ)/SWL1;
+@
+GENR SWLIMZ=LOG(SWIM/SWPOP);                                                  
+GENR SWLCIGZ=LOG((SWC+SWI+SWG)/SWPOP);                                        
+GENR SWLPYZZ=LOG(SWPY/    SWPM);                                              
+GENR SWLCZ=LOG(SWC/SWPOP);                                                    
+GENR SWLYZ=LOG(SWY/SWPOP);                                                    
+GENR SWLI=LOG(SWI);                                                           
+GENR SWLY=LOG(SWY);                                                           
+GENR SWLPY=LOG(SWPY);                                                         
+GENR SWLPM=LOG(SWPM);                                                         
+GENR SWPCPY=100*((SWPY/SWPY(-4))**1-1);                                       
+GENR SWRBZ=      SWRB-    SWRS(-4);                                           
+GENR SWRBZZ=     SWRB(-4)-SWRS(-4);                                           
+GENR SWRSZ=      SWRS-    SWRS(-4);                                           
+GENR SWLH=LOG(SWH);                                                           
+GENR SWLH1=SWLH-SWLH(-4);                                                     
+GENR SWLHA=LOG(SWPY/GEPYA)-SWLH(-4);           
+GENR SWLPXA=LOG(SWPX/(SWPW$*(SWE/SWE10)));
+GENR SWLPXB=LOG(SWPY/(SWPW$*(SWE/SWE10)));
+GENR SWLJ1=LOG(SWJ/SWJ(-4));                                                  
+GENR SWLY1=LOG(SWY/SWY(-4));                                                  
+GENR SWLEXL=LOG(SWJ/SWJMIN);                                                  
+GENR SWLL1Z=LOG(SWL1/SWPOP1);                                                 
+GENR SWLGZ=LOG(SWG/SWPOP);                                                  
+GENR SWLEXZ=LOG(SWEX/SWPOP);                                                
+EQ 211 SWLIMZ SWLIMZ(-4) SWLCIGZ  C 
+ FSR C SWLGZ SWLEXZ(-4) SWLPY(-4) SWLYZ(-4) SWRS(-4)                          
+ SWLIMZ(-4) SWLPYZZ(-4) SWLCIGZ(-4)                                           
+;                                                                             
+EQ 212 SWLCZ C SWLCZ(-4) SWLYZ SWRS
+ FSR C SWLGZ SWLEXZ(-4) SWLPY(-4) SWLYZ(-4) SWRS(-4) SWLCZ(-4)
+;
+LHS SWC=EXP(SWLCZ)*SWPOP;                                                     
+EQ 213 SWLI C SWLI(-4) SWLY SWRS                                              
+ FSR C SWLGZ SWLEXZ(-4) SWLPY(-4) SWLYZ(-4) SWRS(-4) SWLI(-4) SWLY(-4)
+;                                                                             
+LHS SWI=EXP(SWLI);                                                            
+EQ 214 SWLPY SWLPY(-4) C BET SWLPM SWZZ(-4)
+ FSR C SWLGZ SWLEXZ(-4) SWLPY(-4) SWLYZ(-4) SWRS(-4) BET SWLPM(-4) SWZZ(-4)
+;
+LHS SWPY=EXP(SWLPY);                                                          
+EQ 215 SWRS C SWRS(-4) USRSA SWPCPY SWZZ 
+;
+LHS SWRS=(ABS(SWRS-.0)+SWRS-.0)/2.+.0;                                        
+EQ 217 SWLH1 C SWLHA                                                          
+;                                                                             
+LHS SWH=EXP(SWLH1)*SWH(-4);                                                   
+@@EQ 218 SWLPXA SWLPXB RHO=2
+@@;                                                  
+EQ 218  SWLPXA;                                                               
+NLEQ SWLPXA=COEF(1,218)*(SWLPXB-COEF(2,218)*SWLPXB(-4)-COEF(3,218)*SWLPXB(-8))
+ +COEF(2,218)*SWLPXA(-4)+COEF(3,218)*SWLPXA(-8);                              
+LHS SWPX=EXP(SWLPXA)*(SWPW$*(SWE/SWE10));                                     
+EQ 219  SWLJ1 C BET SWLEXL(-4) SWLY1 
+;                                         
+LHS SWJ=EXP(SWLJ1)*SWJ(-4);                                                   
+EQ 220  SWLL1Z C BET SWLL1Z(-4) SWUR                                           
+;                                                                             
+LHS SWL1=EXP(SWLL1Z)*SWPOP1;                                                  
+2SLS;
+ SMPL  1972.1  2017.4 ;
+EST 211 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 212 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 213 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 214 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 215 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 217 PLOT=8;
+@ SMPL  1972.1  2016.4 ;
+@EST 218 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 219 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 220 PLOT=8;
+END;
+@ GR BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT GRM10$=GRPSI1*(GRIM/(GRE10*GRPM10));
+IDENT GREX=(GRX10$*GRE10*GRPX10)/GRPSI2;
+IDENT GRY=GRC+GRI+GRG+GREX-GRIM+GRSTAT+GRV1;
+IDENT GRE=GRH*GEEA;  
+IDENT GRPM=GRPSI3*GRPMP;
+IDENT GRPX$=(GRE10/GRE)*GRPX;
+IDENT GRZZ=LOG(GRY)-LOG(GRYS);
+IDENT GRJMIN=GRY/GRLAM;
+IDENT GRUR=(GRL1-GRJ)/GRL1;
+@
+GENR GRLIMZ=LOG(GRIM/GRPOP);                                                  
+GENR GRLCIGZ=LOG((GRC+GRI+GRG)/GRPOP);                                        
+GENR GRLPYZZ=LOG(GRPY/    GRPM);                                              
+GENR GRLCZ=LOG(GRC/GRPOP);                                                    
+GENR GRLYZ=LOG(GRY/GRPOP);                                                    
+GENR GRLI=LOG(GRI);                                                           
+GENR GRLY=LOG(GRY);                                                           
+GENR GRLPY=LOG(GRPY);                                                         
+GENR GRLPM=LOG(GRPM);                                                         
+GENR GRPCPY=100*((GRPY/GRPY(-4))**1-1);                                       
+GENR GRRBZ=      GRRB-    GRRS(-4);                                           
+GENR GRRBZZ=     GRRB(-4)-GRRS(-4);                                           
+GENR GRRSZ=      GRRS-    GRRS(-4);                                           
+GENR GRLH=LOG(GRH);                                                           
+GENR GRLH1=GRLH-GRLH(-4);                                                     
+GENR GRLHA=LOG(GRPY/GEPYA)-GRLH(-4);           
+GENR GRLPXA=LOG(GRPX/(GRPW$*(GRE/GRE10)));
+GENR GRLPXB=LOG(GRPY/(GRPW$*(GRE/GRE10)));
+GENR GRLGZ=LOG(GRG/GRPOP);                                                  
+GENR GRLEXZ=LOG(GREX/GRPOP);                                                
+@
+EQ 221 GRLIMZ C GRLIMZ(-4) GRLPYZZ GRLCIGZ                                    
+;                                                                             
+LHS GRIM=EXP(GRLIMZ)*GRPOP;                                                   
+EQ 222 GRLCZ C GRLCZ(-4) GRLYZ 
+;
+LHS GRC=EXP(GRLCZ)*GRPOP;                                                     
+EQ 223 GRLI C GRLI(-4) GRLY 
+;                                                                             
+LHS GRI=EXP(GRLI);                                                            
+EQ 227 GRLH1 C GRLHA                                                          
+;                                                                             
+LHS GRH=(1-EU2)*(EXP(GRLH1)*GRH(-4))+EU2*1;                                   
+2SLS; 
+ SMPL  1972.1  2017.4 ;
+EST 221 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 222 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 223 PLOT=8;
+ SMPL  1972.1  2000.4 ;
+EST 227 PLOT=8;
+END;
+@ IR BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT IRM10$=IRPSI1*(IRIM/(IRE10*IRPM10));
+IDENT IREX=(IRX10$*IRE10*IRPX10)/IRPSI2;
+IDENT IRY=IRC+IRI+IRG+IREX-IRIM+IRSTAT+IRV1;
+IDENT IRE=IRH*GEEA;  
+IDENT IRPM=IRPSI3*IRPMP;
+IDENT IRPX$=(IRE10/IRE)*IRPX;
+IDENT IRZZ=LOG(IRY)-LOG(IRYS);
+IDENT IRJMIN=IRY/IRLAM;
+IDENT IRUR=(IRL1-IRJ)/IRL1;
+@
+GENR IRLIMZ=LOG(IRIM/IRPOP);                                                  
+GENR IRLCIGZ=LOG((IRC+IRI+IRG)/IRPOP);                                        
+GENR IRLPYZZ=LOG(IRPY/    IRPM);                                              
+GENR IRLCZ=LOG(IRC/IRPOP);                                                    
+GENR IRLYZ=LOG(IRY/IRPOP);                                                    
+GENR IRLI=LOG(IRI);                                                           
+GENR IRLY=LOG(IRY);                                                           
+GENR IRLPY=LOG(IRPY);                                                         
+GENR IRLPM=LOG(IRPM);                                                         
+GENR IRPCPY=100*((IRPY/IRPY(-4))**1-1);                                       
+GENR IRRBZ=      IRRB-    IRRS(-4);                                           
+GENR IRRBZZ=     IRRB(-4)-IRRS(-4);                                           
+GENR IRRSZ=      IRRS-    IRRS(-4);                                           
+GENR IRLH=LOG(IRH);                                                           
+GENR IRLH1=IRLH-IRLH(-4);                                                     
+GENR IRLHA=LOG(IRPY/GEPYA)-IRLH(-4);           
+GENR IRLPXA=LOG(IRPX/(IRPW$*(IRE/IRE10)));
+GENR IRLPXB=LOG(IRPY/(IRPW$*(IRE/IRE10)));
+GENR IRLJ1=LOG(IRJ/IRJ(-4));                                                  
+GENR IRLY1=LOG(IRY/IRY(-4));                                                  
+GENR IRLEXL=LOG(IRJ/IRJMIN);                                                  
+GENR IRLL1Z=LOG(IRL1/IRPOP1);                                                 
+GENR IRLGZ=LOG(IRG/IRPOP);                                                  
+GENR IRLEXZ=LOG(IREX/IRPOP);                                                
+@
+EQ 231 IRLIMZ C IRLIMZ(-4) IRLPYZZ IRLCIGZ
+;                                   
+LHS IRIM=EXP(IRLIMZ)*IRPOP;                                                   
+EQ 232 IRLCZ C IRLCZ(-4) IRLYZ IRRS                                           
+ FSR C IRLGZ IRLEXZ(-4) IRLPY(-4) IRLYZ(-4) IRRS(-4) IRLCZ(-4)
+;                                                                   
+LHS IRC=EXP(IRLCZ)*IRPOP;                                                     
+EQ 233 IRLI C IRLI(-4) IRLY 
+;
+LHS IRI=EXP(IRLI);                                                            
+EQ 234 IRLPY IRLPY(-4) C BET IRLPM(-4) IRZZ(-4) 
+;                                                       
+LHS IRPY=EXP(IRLPY);                                                          
+EQ 235 IRRS C IRRS(-4) IRPCPY GERSA USRSA 
+;                                                                             
+LHS IRRS=(1-EU1)*IRRS+EU1*EURSA;                                           
+EQ 237 IRLH1 C IRLHA                                                          
+;                                                                             
+LHS IRH=(1-EU1)*(EXP(IRLH1)*IRH(-4))+EU1*1;                                   
+@@EQ 238 IRLPXA IRLPXB RHO=2
+@@;                                           
+EQ 238  IRLPXA;                                                               
+NLEQ IRLPXA=COEF(1,238)*(IRLPXB-COEF(2,238)*IRLPXB(-4)-COEF(3,238)*IRLPXB(-8))
+ +COEF(2,238)*IRLPXA(-4)+COEF(3,238)*IRLPXA(-8);                              
+LHS IRPX=EXP(IRLPXA)*(IRPW$*(IRE/IRE10));                                     
+EQ 239  IRLJ1 C BET IRLEXL(-4) IRLY1 
+;
+LHS IRJ=EXP(IRLJ1)*IRJ(-4);                                                   
+EQ 240  IRLL1Z C BET IRLL1Z(-4) IRUR                                           
+;                                                                             
+LHS IRL1=EXP(IRLL1Z)*IRPOP1;                                                  
+2SLS;
+ SMPL  1972.1  2016.4 ;
+EST 231 PLOT=8;
+ SMPL  1974.1  2016.4 ;
+EST 232 PLOT=8;
+ SMPL  1973.1  2016.4 ;
+EST 233 PLOT=8;
+ SMPL  1974.1  2017.4 ;
+EST 234 PLOT=8;
+ SMPL  1974.1  1998.4 ;
+EST 235 PLOT=8;
+ SMPL  1972.1  1998.4 ;
+EST 237 PLOT=8;
+@ SMPL  1972.1  2016.4 ;
+@EST 238 PLOT=8;
+ SMPL  1985.1  2016.4 ;
+EST 239 PLOT=8;
+ SMPL  1985.1  2016.4 ;
+EST 240 PLOT=8;
+END;
+@ PO BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT POM10$=POPSI1*(POIM/(POE10*POPM10));
+IDENT POEX=(POX10$*POE10*POPX10)/POPSI2;
+IDENT POY=POC+POI+POG+POEX-POIM+POSTAT+POV1;
+IDENT POE=POH*GEEA;  
+IDENT POPM=POPSI3*POPMP;
+IDENT POPX$=(POE10/POE)*POPX;
+IDENT POZZ=LOG(POY)-LOG(POYS);
+IDENT POJMIN=POY/POLAM;
+IDENT POUR=(POL1-POJ)/POL1;
+@
+GENR POLIMZ=LOG(POIM/POPOP);                                                  
+GENR POLCIGZ=LOG((POC+POI+POG)/POPOP);                                        
+GENR POLPYZZ=LOG(POPY/    POPM);                                              
+GENR POLCZ=LOG(POC/POPOP);                                                    
+GENR POLYZ=LOG(POY/POPOP);                                                    
+GENR POLI=LOG(POI);                                                           
+GENR POLY=LOG(POY);                                                           
+GENR POLPY=LOG(POPY);                                                         
+GENR POLPM=LOG(POPM);                                                         
+GENR POPCPY=100*((POPY/POPY(-4))**1-1);                                       
+GENR PORBZ=      PORB-    PORS(-4);                                           
+GENR PORBZZ=     PORB(-4)-PORS(-4);                                           
+GENR PORSZ=      PORS-    PORS(-4);                                           
+GENR POLH=LOG(POH);                                                           
+GENR POLH1=POLH-POLH(-4);                                                     
+GENR POLHA=LOG(POPY/GEPYA)-POLH(-4);           
+GENR POLPXA=LOG(POPX/(POPW$*(POE/POE10)));
+GENR POLPXB=LOG(POPY/(POPW$*(POE/POE10)));
+GENR POLJ1=LOG(POJ/POJ(-4));                                                  
+GENR POLY1=LOG(POY/POY(-4));                                                  
+GENR POLEXL=LOG(POJ/POJMIN);                                                  
+GENR POLL1Z=LOG(POL1/POPOP1);                                                 
+GENR POLGZ=LOG(POG/POPOP);                                                  
+GENR POLEXZ=LOG(POEX/POPOP);                                                
+@
+EQ 241 POLIMZ C POLIMZ(-4) POLPYZZ POLCIGZ 
+ FSR C POLGZ POLEXZ(-4) POLPY(-4) PORB(-4) POLIMZ(-4) POLPYZZ(-4) 
+ POLCIGZ(-4)
+;
+LHS POIM=EXP(POLIMZ)*POPOP;                                                   
+EQ 242 POLCZ C POLCZ(-4) POLYZ PORB                                           
+ FSR C POLGZ POLEXZ(-4) POLPY(-4) POLYZ(-4) PORB(-4) POLCZ(-4)
+;                                                                             
+LHS POC=EXP(POLCZ)*POPOP;                                                     
+EQ 243 POLI C POLI(-4) POLY PORB 
+;
+LHS POI=EXP(POLI);                                                            
+EQ 244 POLPY POLPY(-4) C BET POLPM  POZZ(-4) 
+ FSR C POLGZ POLEXZ(-4) POLPY(-4) POLYZ(-4) PORB(-4) BET POLPM(-4) POZZ(-4)
+;                                                       
+LHS POPY=EXP(POLPY);                                                          
+EQ 245 PORS C PORS(-4) POPCPY  POZZ 
+;                                                                             
+LHS PORS=(1-EU1)*PORS+EU1*EURSA;                                           
+EQ 246 PORBZ C PORBZZ PORSZ 
+;                                                 
+LHS  PORB= (1-EU1)*(PORBZ+   PORS(-4))+EU1*EURBA;                           
+EQ 247 POLH1 C POLHA                                                          
+;                                                                             
+LHS POH=(1-EU1)*(EXP(POLH1)*POH(-4))+EU1*1;                                   
+2SLS;
+ SMPL  1972.1  2017.4 ;
+EST 241 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 242 PLOT=8;
+ SMPL  1972.1  2016.4 ;
+EST 243 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 244 PLOT=8;
+ SMPL  1984.1  1998.4 ;
+EST 245 PLOT=8;
+ SMPL  1984.1  1998.4 ;
+EST 246 PLOT=8;
+ SMPL  1972.1  1998.4 ;
+EST 247 PLOT=8;                   
+END;
+@ SP BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT SPM10$=SPPSI1*(SPIM/(SPE10*SPPM10));
+IDENT SPEX=(SPX10$*SPE10*SPPX10)/SPPSI2;
+IDENT SPY=SPC+SPI+SPG+SPEX-SPIM+SPSTAT+SPV1;
+IDENT SPE=SPH*GEEA;  
+IDENT SPPM=SPPSI3*SPPMP;
+IDENT SPPX$=(SPE10/SPE)*SPPX;
+IDENT SPZZ=LOG(SPY)-LOG(SPYS);
+IDENT SPJMIN=SPY/SPLAM;
+IDENT SPUR=(SPL1-SPJ)/SPL1;
+@
+GENR SPLIMZ=LOG(SPIM/SPPOP);                                                  
+GENR SPLCIGZ=LOG((SPC+SPI+SPG)/SPPOP);                                        
+GENR SPLPYZZ=LOG(SPPY/    SPPM);                                              
+GENR SPLCZ=LOG(SPC/SPPOP);                                                    
+GENR SPLYZ=LOG(SPY/SPPOP);                                                    
+GENR SPLI=LOG(SPI);                                                           
+GENR SPLY=LOG(SPY);                                                           
+GENR SPLPY=LOG(SPPY);                                                         
+GENR SPLPM=LOG(SPPM);                                                         
+GENR SPPCPY=100*((SPPY/SPPY(-4))**1-1);                                       
+GENR SPRBZ=      SPRB-    SPRS(-4);                                           
+GENR SPRBZZ=     SPRB(-4)-SPRS(-4);                                           
+GENR SPRSZ=      SPRS-    SPRS(-4);                                           
+GENR SPLH=LOG(SPH);                                                           
+GENR SPLH1=SPLH-SPLH(-4);                                                     
+GENR SPLHA=LOG(SPPY/GEPYA)-SPLH(-4);           
+GENR SPLPXA=LOG(SPPX/(SPPW$*(SPE/SPE10)));
+GENR SPLPXB=LOG(SPPY/(SPPW$*(SPE/SPE10)));
+GENR SPLJ1=LOG(SPJ/SPJ(-4));                                                  
+GENR SPLY1=LOG(SPY/SPY(-4));                                                  
+GENR SPLEXL=LOG(SPJ/SPJMIN);                                                  
+GENR SPLL1Z=LOG(SPL1/SPPOP1);                                                 
+GENR SPLGZ=LOG(SPG/SPPOP);                                                  
+GENR SPLEXZ=LOG(SPEX/SPPOP);                                                
+@
+EQ 251 SPLIMZ C SPLIMZ(-4) SPLPYZZ SPLCIGZ
+;
+LHS SPIM=EXP(SPLIMZ)*SPPOP;                                                   
+EQ 252 SPLCZ C SPLCZ(-4) SPLYZ 
+ FSR C SPLGZ SPLEXZ(-4) SPLPY(-4) SPLYZ(-4)  SPLCZ(-4)
+;                                                                             
+LHS SPC=EXP(SPLCZ)*SPPOP;                                                     
+EQ 253 SPLI C SPLI(-4) SPLY 
+;                                                                             
+LHS SPI=EXP(SPLI);                                                            
+EQ 254 SPLPY SPLPY(-4) C BET SPLPM(-4) SPZZ(-4)                                
+;
+LHS SPPY=EXP(SPLPY);                                                          
+EQ 255 SPRS C SPRS(-4) USRSA SPPCPY 
+;                                                                             
+LHS SPRS=(1-EU1)*SPRS+EU1*EURSA  ;                                           
+EQ 256 SPRBZ C SPRBZZ SPRSZ 
+;                                                 
+LHS  SPRB= (1-EU1)*(SPRBZ+   SPRS(-4))+EU1*EURBA;                           
+EQ 257 SPLH1 C SPLHA                                                          
+;                                                                             
+LHS SPH=(1-EU1)*(EXP(SPLH1)*SPH(-4))+EU1*1;                                   
+@@EQ 258 SPLPXA SPLPXB RHO=2
+@@;                                                  
+EQ 258  SPLPXA;                                                               
+NLEQ SPLPXA=COEF(1,258)*(SPLPXB-COEF(2,258)*SPLPXB(-4)-COEF(3,258)*SPLPXB(-8))
+ +COEF(2,258)*SPLPXA(-4)+COEF(3,258)*SPLPXA(-8);                              
+LHS SPPX=EXP(SPLPXA)*(SPPW$*(SPE/SPE10));                                     
+2SLS;
+ SMPL  1972.1  2017.4 ;
+EST 251 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 252 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 253 PLOT=8;
+ SMPL  1972.1  2017.4 ;
+EST 254 PLOT=8;
+ SMPL  1989.1  1998.4 ;
+EST 255 PLOT=8;
+ SMPL  1989.1  1998.4 ;
+EST 256 PLOT=8;
+ SMPL  1972.1  1998.4 ;
+EST 257 PLOT=8;
+END;
+@ NZ BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT NZM10$=NZPSI1*(NZIM/(NZE10*NZPM10));
+IDENT NZEX=(NZX10$*NZE10*NZPX10)/NZPSI2;
+IDENT NZY=NZC+NZI+NZG+NZEX-NZIM+NZSTAT+NZV1;
+IDENT NZH=NZE/GEEA;
+IDENT NZPM=NZPSI3*NZPMP;
+IDENT NZPX$=(NZE10/NZE)*NZPX;
+IDENT NZZZ=LOG(NZY)-LOG(NZYS);
+IDENT NZJMIN=NZY/NZLAM;
+IDENT NZUR=(NZL1-NZJ)/NZL1;
+@
+GENR NZLIMZ=LOG(NZIM/NZPOP);                                                  
+GENR NZLCIGZ=LOG((NZC+NZI+NZG)/NZPOP);                                        
+GENR NZLPYZZ=LOG(NZPY/    NZPM);                                              
+GENR NZLCZ=LOG(NZC/NZPOP);                                                    
+GENR NZLYZ=LOG(NZY/NZPOP);                                                    
+GENR NZLI=LOG(NZI);                                                           
+GENR NZLY=LOG(NZY);                                                           
+GENR NZLPY=LOG(NZPY);                                                         
+GENR NZLPM=LOG(NZPM);                                                         
+GENR NZPCPY=100*((NZPY/NZPY(-4))**1-1);                                       
+GENR NZRBZ=      NZRB-    NZRS(-4);                                           
+GENR NZRBZZ=     NZRB(-4)-NZRS(-4);                                           
+GENR NZRSZ=      NZRS-    NZRS(-4);                                           
+GENR NZLE=LOG(NZE);                                                           
+GENR NZLE1=NZLE-NZLE(-4);                                                     
+GENR NZLEA=LOG(NZPY/USPYA)-NZLE(-4);           
+GENR NZLPXA=LOG(NZPX/(NZPW$*(NZE/NZE10)));
+GENR NZLPXB=LOG(NZPY/(NZPW$*(NZE/NZE10)));
+GENR NZLJ1=LOG(NZJ/NZJ(-4));                                                  
+GENR NZLY1=LOG(NZY/NZY(-4));                                                  
+GENR NZLEXL=LOG(NZJ/NZJMIN);                                                  
+GENR NZLL1Z=LOG(NZL1/NZPOP1);                                                 
+GENR NZLGZ=LOG(NZG/NZPOP);                                                  
+GENR NZLEXZ=LOG(NZEX/NZPOP);                                                
+GENR NZLRSZ=.25*LOG((1+NZRS/100.)/(1+USRSA/100.));                            
+@
+EQ 261 NZLIMZ C NZLIMZ(-4) NZLPYZZ NZLCIGZ                                    
+ FSR C NZLGZ NZLEXZ(-4) NZLPY(-4) NZLYZ(-4) NZRB(-4)                          
+ NZLIMZ(-4) NZLPYZZ(-4) NZLCIGZ(-4)                                           
+;                                                                             
+LHS NZIM=EXP(NZLIMZ)*NZPOP;                                                   
+EQ 262 NZLCZ C NZLCZ(-4) NZLYZ NZRS
+ FSR C NZLGZ NZLEXZ(-4) NZLPY(-4) NZLYZ(-4) NZRB(-4) NZLCZ(-4) NZRS(-4)
+;                                                                             
+LHS NZC=EXP(NZLCZ)*NZPOP;                                                     
+EQ 263 NZLI C NZLI(-4) NZLY 
+ FSR C NZLGZ NZLEXZ(-4) NZLPY(-4) NZLYZ(-4) NZRB(-4) NZLI(-4) NZLY(-4) NZRS(-4)
+;                                                                             
+LHS NZI=EXP(NZLI);                                                            
+EQ 264 NZLPY NZLPY(-4) C BET NZLPM  NZZZ(-4)
+ FSR C NZLGZ NZLEXZ(-4) NZLPY(-4) NZLYZ(-4) NZRB(-4) BET NZLPM(-4) NZZZ(-4)
+  NZRS(-4)
+;
+LHS NZPY=EXP(NZLPY);                                                          
+EQ 265 NZRS C NZRS(-4) NZPCPY USRSA NZZZ
+;
+LHS NZRS=(ABS(NZRS-.0)+NZRS-.0)/2.+.0;                                        
+EQ 266 NZRBZ C NZRBZZ NZRSZ 
+;
+LHS  NZRB=       NZRBZ+   NZRS(-4);                                           
+GENR NZLE1Z=NZLE1-.050*NZLEA;                                                 
+EQ 267 NZLE1Z C  NZLRSZ 
+;
+LHS NZE=EXP(NZLE1Z+.050*NZLEA)*NZE(-4);                                       
+@@EQ 268 NZLPXA NZLPXB RHO=2
+@@;                                                  
+EQ 268  NZLPXA;                                                               
+NLEQ NZLPXA=COEF(1,268)*(NZLPXB-COEF(2,268)*NZLPXB(-4)-COEF(3,268)*NZLPXB(-8))
+ +COEF(2,268)*NZLPXA(-4)+COEF(3,268)*NZLPXA(-8);                              
+LHS NZPX=EXP(NZLPXA)*(NZPW$*(NZE/NZE10));                                     
+2SLS;
+ SMPL  1975.1  2016.4 ;
+EST 261 PLOT=8;
+ SMPL  1975.1  2016.4 ;
+EST 262 PLOT=8;
+ SMPL  1975.1  2016.4 ;
+EST 263 PLOT=8;
+ SMPL  1975.1  2016.4 ;
+EST 264 PLOT=8;
+ SMPL  1975.1  2016.4 ;
+EST 265 PLOT=8;
+ SMPL  1975.1  2017.4 ;
+EST 266 PLOT=8;
+ SMPL  1974.1  2016.4 ;
+EST 267 PLOT=8;
+@ SMPL  1972.1  2016.4 ;
+@EST 268 PLOT=8;
+END;
+@ SA SAGIN
+@
+SMPL 1960.1 2017.4;
+IDENT SAM10$=SAPSI1*(SAIM/(SAE10*SAPM10));
+IDENT SAEX=(SAX10$*SAE10*SAPX10)/SAPSI2;
+IDENT SAY=SAC+SAI+SAG+SAEX-SAIM+SASTAT+SAV1;
+IDENT SAH=SAE/GEEA;
+IDENT SAPM=SAPSI3*SAPMP;
+IDENT SAPX$=(SAE10/SAE)*SAPX;
+IDENT SAZZ=LOG(SAY)-LOG(SAYS);
+IDENT SAJMIN=SAY/SALAM;
+IDENT SAUR=(SAL1-SAJ)/SAL1;
+@
+GENR SALIMZ=LOG(SAIM/SAPOP);                                                  
+GENR SALCIGZ=LOG((SAC+SAI+SAG)/SAPOP);                                        
+GENR SALPYZZ=LOG(SAPY/    SAPM);                                              
+GENR SALCZ=LOG(SAC/SAPOP);                                                    
+GENR SALYZ=LOG(SAY/SAPOP);                                                    
+GENR SALI=LOG(SAI);                                                           
+GENR SALY=LOG(SAY);                                                           
+GENR SALPY=LOG(SAPY);                                                         
+GENR SALPM=LOG(SAPM);                                                         
+GENR SAPCPY=100*((SAPY/SAPY(-4))**1-1);                                       
+GENR SARBZ=      SARB-    SARS(-4);                                           
+GENR SARBZZ=     SARB(-4)-SARS(-4);                                           
+GENR SARSZ=      SARS-    SARS(-4);                                           
+GENR SALPXA=LOG(SAPX/(SAPW$*(SAE/SAE10)));
+GENR SALPXB=LOG(SAPY/(SAPW$*(SAE/SAE10)));
+GENR SALGZ=LOG(SAG/SAPOP);                                                  
+GENR SALEXZ=LOG(SAEX/SAPOP);                                                
+@
+EQ 271 SALIMZ C SALIMZ(-4) SALCIGZ 
+;                                          
+LHS SAIM=EXP(SALIMZ)*SAPOP;                                                   
+EQ 272 SALCZ C SALCZ(-4) SALYZ                                                
+;                                                                             
+LHS SAC=EXP(SALCZ)*SAPOP;                                                     
+2SLS;
+SMPL 1982.1 2016.4;
+EST 271 PLOT=8;
+SMPL 1982.1 2016.4;
+EST 272 PLOT=8;
+END;
+@ CO BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT COM10$=COPSI1*(COIM/(COE10*COPM10));
+IDENT COEX=(COX10$*COE10*COPX10)/COPSI2;
+IDENT COY=COC+COI+COGG+COEX-COIM+COSTAT+COV1;
+IDENT COH=COE/GEEA;
+IDENT COPM=COPSI3*COPMP;
+IDENT COPX$=(COE10/COE)*COPX;
+IDENT COZZ=LOG(COY)-LOG(COYS);
+IDENT COJMIN=COY/COLAM;
+IDENT COUR=(COL1-COJ)/COL1;
+@
+GENR COLIMZ=LOG(COIM/COPOP);                                                  
+GENR COLCIGZ=LOG((COC+COI+COGG)/COPOP);                                        
+GENR COLPYZZ=LOG(COPY/    COPM);                                              
+GENR COLCZ=LOG(COC/COPOP);                                                    
+GENR COLYZ=LOG(COY/COPOP);                                                    
+GENR COLI=LOG(COI);                                                           
+GENR COLY=LOG(COY);                                                           
+GENR COLPY=LOG(COPY);                                                         
+GENR COLPM=LOG(COPM);                                                         
+GENR COPCPY=100*((COPY/COPY(-4))**1-1);                                       
+GENR CORBZ=      CORB-    CORS(-4);                                           
+GENR CORBZZ=     CORB(-4)-CORS(-4);                                           
+GENR CORSZ=      CORS-    CORS(-4);                                           
+GENR COLPXA=LOG(COPX/(COPW$*(COE/COE10)));
+GENR COLPXB=LOG(COPY/(COPW$*(COE/COE10)));
+GENR COLGZ=LOG(COGG/COPOP);                                                  
+GENR COLEXZ=LOG(COEX/COPOP);                                                
+@
+EQ 291 COLIMZ C COLIMZ(-4) COLCIGZ 
+;                                  
+LHS COIM=EXP(COLIMZ)*COPOP;                                                   
+EQ 292 COLCZ C COLCZ(-4) COLYZ 
+;                                              
+LHS COC=EXP(COLCZ)*COPOP;                                                     
+2SLS;
+SMPL 1972.1 2016.4;
+EST 291 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 292 PLOT=8;
+END;
+@ JO JOGIN
+@
+SMPL 1960.1 2017.4;
+IDENT JOM10$=JOPSI1*(JOIM/(JOE10*JOPM10));
+IDENT JOEX=(JOX10$*JOE10*JOPX10)/JOPSI2;
+IDENT JOY=JOC+JOI+JOG+JOEX-JOIM+JOSTAT+JOV1;
+IDENT JOH=JOE/GEEA;
+IDENT JOPM=JOPSI3*JOPMP;
+IDENT JOPX$=(JOE10/JOE)*JOPX;
+IDENT JOZZ=LOG(JOY)-LOG(JOYS);
+IDENT JOJMIN=JOY/JOLAM;
+IDENT JOUR=(JOL1-JOJ)/JOL1;
+@
+GENR JOLIMZ=LOG(JOIM/JOPOP);                                                  
+GENR JOLCIGZ=LOG((JOC+JOI+JOG)/JOPOP);                                        
+GENR JOLPYZZ=LOG(JOPY/    JOPM);                                              
+GENR JOLCZ=LOG(JOC/JOPOP);                                                    
+GENR JOLYZ=LOG(JOY/JOPOP);                                                    
+GENR JOLI=LOG(JOI);                                                           
+GENR JOLY=LOG(JOY);                                                           
+GENR JOLPY=LOG(JOPY);                                                         
+GENR JOLPM=LOG(JOPM);                                                         
+GENR JOPCPY=100*((JOPY/JOPY(-4))**1-1);                                       
+GENR JORBZ=      JORB-    JORS(-4);                                           
+GENR JORBZZ=     JORB(-4)-JORS(-4);                                           
+GENR JORSZ=      JORS-    JORS(-4);                                           
+GENR JOLPXA=LOG(JOPX/(JOPW$*(JOE/JOE10)));
+GENR JOLPXB=LOG(JOPY/(JOPW$*(JOE/JOE10)));
+GENR JOLGZ=LOG(JOG/JOPOP);                                                  
+GENR JOLEXZ=LOG(JOEX/JOPOP);                                                
+@
+EQ 301 JOLIMZ C JOLIMZ(-4) JOLCIGZ 
+;                                          
+LHS JOIM=EXP(JOLIMZ)*JOPOP;                                                   
+EQ 302 JOLCZ C JOLCZ(-4) JOLYZ 
+;                                              
+LHS JOC=EXP(JOLCZ)*JOPOP;                                                     
+EQ 304 JOLPY JOLPY(-4) C BET JOLPM 
+;
+LHS JOPY=EXP(JOLPY);                                                          
+2SLS;
+SMPL 1972.1 2016.4;
+EST 301 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 302 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 304 PLOT=8;
+END;
+@ ID BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT IDM10$=IDPSI1*(IDIM/(IDE10*IDPM10));
+IDENT IDEX=(IDX10$*IDE10*IDPX10)/IDPSI2;
+IDENT IDY=IDC+IDI+IDG+IDEX-IDIM+IDSTAT+IDV1;
+IDENT IDH=IDE/GEEA;
+IDENT IDPM=IDPSI3*IDPMP;
+IDENT IDPX$=(IDE10/IDE)*IDPX;
+IDENT IDZZ=LOG(IDY)-LOG(IDYS);
+IDENT IDJMIN=IDY/IDLAM;
+IDENT IDUR=(IDL1-IDJ)/IDL1;
+@
+GENR IDLIMZ=LOG(IDIM/IDPOP);                                                  
+GENR IDLCIGZ=LOG((IDC+IDI+IDG)/IDPOP);                                        
+GENR IDLPYZZ=LOG(IDPY/    IDPM);                                              
+GENR IDLCZ=LOG(IDC/IDPOP);                                                    
+GENR IDLYZ=LOG(IDY/IDPOP);                                                    
+GENR IDLI=LOG(IDI);                                                           
+GENR IDLY=LOG(IDY);                                                           
+GENR IDLPY=LOG(IDPY);                                                         
+GENR IDLPM=LOG(IDPM);                                                         
+GENR IDPCPY=100*((IDPY/IDPY(-4))**1-1);                                       
+GENR IDRBZ=      IDRB-    IDRS(-4);                                           
+GENR IDRBZZ=     IDRB(-4)-IDRS(-4);                                           
+GENR IDRSZ=      IDRS-    IDRS(-4);                                           
+GENR IDLPXA=LOG(IDPX/(IDPW$*(IDE/IDE10)));
+GENR IDLPXB=LOG(IDPY/(IDPW$*(IDE/IDE10)));
+GENR IDLGZ=LOG(IDG/IDPOP);                                                  
+GENR IDLEXZ=LOG(IDEX/IDPOP);                                                
+@
+EQ 321 IDLIMZ C IDLIMZ(-4) IDLCIGZ 
+;                                           
+LHS IDIM=EXP(IDLIMZ)*IDPOP;                                                   
+EQ 322 IDLCZ C IDLCZ(-4) IDLYZ 
+;                                                                             
+LHS IDC=EXP(IDLCZ)*IDPOP;                                                     
+EQ 323 IDLI C IDLI(-4) IDLY 
+;                                                                             
+LHS IDI=EXP(IDLI);                                                            
+@@EQ 328 IDLPXA IDLPXB RHO=2
+@@;                                                  
+EQ 328  IDLPXA;                                                               
+NLEQ IDLPXA=COEF(1,328)*(IDLPXB-COEF(2,328)*IDLPXB(-4)-COEF(3,328)*IDLPXB(-8))
+ +COEF(2,328)*IDLPXA(-4)+COEF(3,328)*IDLPXA(-8);                              
+LHS IDPX=EXP(IDLPXA)*(IDPW$*(IDE/IDE10));                                     
+2SLS;
+SMPL 1978.1 2016.4;
+EST 321 PLOT=8;
+SMPL 1978.1 2016.4;
+EST 322 PLOT=8;
+SMPL 1978.1 2016.4;
+EST 323 PLOT=8;
+END;
+@ MA BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT MAM10$=MAPSI1*(MAIM/(MAE10*MAPM10));
+IDENT MAEX=(MAX10$*MAE10*MAPX10)/MAPSI2;
+IDENT MAY=MAC+MAI+MAG+MAEX-MAIM+MASTAT+MAV1;
+IDENT MAH=MAE/GEEA;
+IDENT MAPM=MAPSI3*MAPMP;
+IDENT MAPX$=(MAE10/MAE)*MAPX;
+IDENT MAZZ=LOG(MAY)-LOG(MAYS);
+IDENT MAJMIN=MAY/MALAM;
+IDENT MAUR=(MAL1-MAJ)/MAL1;
+@
+GENR MALIMZ=LOG(MAIM/MAPOP);                                                  
+GENR MALCIGZ=LOG((MAC+MAI+MAG)/MAPOP);                                        
+GENR MALPYZZ=LOG(MAPY/    MAPM);                                              
+GENR MALCZ=LOG(MAC/MAPOP);                                                    
+GENR MALYZ=LOG(MAY/MAPOP);                                                    
+GENR MALI=LOG(MAI);                                                           
+GENR MALY=LOG(MAY);                                                           
+GENR MALPY=LOG(MAPY);                                                         
+GENR MALPM=LOG(MAPM);                                                         
+GENR MAPCPY=100*((MAPY/MAPY(-4))**1-1);                                       
+GENR MARBZ=      MARB-    MARS(-4);                                           
+GENR MARBZZ=     MARB(-4)-MARS(-4);                                           
+GENR MARSZ=      MARS-    MARS(-4);                                           
+GENR MALPXA=LOG(MAPX/(MAPW$*(MAE/MAE10)));
+GENR MALPXB=LOG(MAPY/(MAPW$*(MAE/MAE10)));
+GENR MALGZ=LOG(MAG/MAPOP);                                                  
+GENR MALEXZ=LOG(MAEX/MAPOP);                                                
+@
+EQ 331 MALIMZ C MALIMZ(-4) MALCIGZ 
+;                                          
+LHS MAIM=EXP(MALIMZ)*MAPOP;                                                   
+EQ 332 MALCZ C MALCZ(-4) MALYZ 
+;                                              
+LHS MAC=EXP(MALCZ)*MAPOP;                                                     
+EQ 334 MALPY MALPY(-4) C BET MAZZ
+;                                                                             
+LHS MAPY=EXP(MALPY);                                                          
+2SLS;
+SMPL 1972.1 2016.4;
+EST 331 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 332 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 334 PLOT=8;
+END;
+@ PA BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT PAM10$=PAPSI1*(PAIM/(PAE10*PAPM10));
+IDENT PAEX=(PAX10$*PAE10*PAPX10)/PAPSI2;
+IDENT PAY=PAC+PAI+PAG+PAEX-PAIM+PASTAT+PAV1;
+IDENT PAH=PAE/GEEA;
+IDENT PAPM=PAPSI3*PAPMP;
+IDENT PAPX$=(PAE10/PAE)*PAPX;
+IDENT PAZZ=LOG(PAY)-LOG(PAYS);
+IDENT PAJMIN=PAY/PALAM;
+IDENT PAUR=(PAL1-PAJ)/PAL1;
+@
+GENR PALIMZ=LOG(PAIM/PAPOP);                                                  
+GENR PALCIGZ=LOG((PAC+PAI+PAG)/PAPOP);                                        
+GENR PALPYZZ=LOG(PAPY/    PAPM);                                              
+GENR PALCZ=LOG(PAC/PAPOP);                                                    
+GENR PALYZ=LOG(PAY/PAPOP);                                                    
+GENR PALI=LOG(PAI);                                                           
+GENR PALY=LOG(PAY);                                                           
+GENR PALPY=LOG(PAPY);                                                         
+GENR PALPM=LOG(PAPM);                                                         
+GENR PAPCPY=100*((PAPY/PAPY(-4))**1-1);                                       
+GENR PARBZ=      PARB-    PARS(-4);                                           
+GENR PARBZZ=     PARB(-4)-PARS(-4);                                           
+GENR PARSZ=      PARS-    PARS(-4);                                           
+GENR PALPXA=LOG(PAPX/(PAPW$*(PAE/PAE10)));
+GENR PALPXB=LOG(PAPY/(PAPW$*(PAE/PAE10)));
+GENR PALGZ=LOG(PAG/PAPOP);                                                  
+GENR PALEXZ=LOG(PAEX/PAPOP);                                                
+@
+EQ 341 PALIMZ C PALIMZ(-4) PALCIGZ 
+;                                          
+LHS PAIM=EXP(PALIMZ)*PAPOP;                                                   
+EQ 342 PALCZ C PALCZ(-4) PALYZ                                                
+;                                                                             
+LHS PAC=EXP(PALCZ)*PAPOP;                                                     
+EQ 343 PALI C PALI(-4) PALY                                                   
+;                                                                             
+LHS PAI=EXP(PALI);                                                            
+EQ 344 PALPY PALPY(-4) C BET PALPM PAZZ
+;                                                                             
+LHS PAPY=EXP(PALPY);                                                          
+@@EQ 348 PALPXA PALPXB RHO=2
+@@;                                                  
+EQ 348  PALPXA;                                                               
+NLEQ PALPXA=COEF(1,348)*(PALPXB-COEF(2,348)*PALPXB(-4)-COEF(3,348)*PALPXB(-8))
+ +COEF(2,348)*PALPXA(-4)+COEF(3,348)*PALPXA(-8);                              
+LHS PAPX=EXP(PALPXA)*(PAPW$*(PAE/PAE10));                                     
+2SLS;
+SMPL 1972.1 2016.4;
+EST 341 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 342 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 343 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 344 PLOT=8;
+END;
+@ PH BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT PHM10$=PHPSI1*(PHIM/(PHE10*PHPM10));
+IDENT PHEX=(PHX10$*PHE10*PHPX10)/PHPSI2;
+IDENT PHY=PHC+PHI+PHG+PHEX-PHIM+PHSTAT+PHV1;
+IDENT PHH=PHE/GEEA;
+IDENT PHPM=PHPSI3*PHPMP;
+IDENT PHPX$=(PHE10/PHE)*PHPX;
+IDENT PHZZ=LOG(PHY)-LOG(PHYS);
+IDENT PHJMIN=PHY/PHLAM;
+IDENT PHUR=(PHL1-PHJ)/PHL1;
+@
+GENR PHLIMZ=LOG(PHIM/PHPOP);                                                  
+GENR PHLCIGZ=LOG((PHC+PHI+PHG)/PHPOP);                                        
+GENR PHLPYZZ=LOG(PHPY/    PHPM);                                              
+GENR PHLCZ=LOG(PHC/PHPOP);                                                    
+GENR PHLYZ=LOG(PHY/PHPOP);                                                    
+GENR PHLI=LOG(PHI);                                                           
+GENR PHLY=LOG(PHY);                                                           
+GENR PHLPY=LOG(PHPY);                                                         
+GENR PHLPM=LOG(PHPM);                                                         
+GENR PHPCPY=100*((PHPY/PHPY(-4))**1-1);                                       
+GENR PHRBZ=      PHRB-    PHRS(-4);                                           
+GENR PHRBZZ=     PHRB(-4)-PHRS(-4);                                           
+GENR PHRSZ=      PHRS-    PHRS(-4);                                           
+GENR PHLE=LOG(PHE);                                                           
+GENR PHLE1=PHLE-PHLE(-4);                                                     
+GENR PHLEA=LOG(PHPY/USPYA)-PHLE(-4);           
+GENR PHLPXA=LOG(PHPX/(PHPW$*(PHE/PHE10)));
+GENR PHLPXB=LOG(PHPY/(PHPW$*(PHE/PHE10)));
+GENR PHLGZ=LOG(PHG/PHPOP);                                                  
+GENR PHLEXZ=LOG(PHEX/PHPOP);                                                
+@
+EQ 351 PHLIMZ C PHLIMZ(-4) PHLCIGZ 
+;                                          
+LHS PHIM=EXP(PHLIMZ)*PHPOP;                                                   
+EQ 352 PHLCZ C PHLCZ(-4) PHLYZ PHRS 
+;                                                                             
+LHS PHC=EXP(PHLCZ)*PHPOP;                                                     
+EQ 355 PHRS C PHRS(-4) PHPCPY USRSA                                           
+;                                                                             
+LHS PHRS=(ABS(PHRS-.0)+PHRS-.0)/2.+.0;                                        
+EQ 357 PHLE1 C PHLEA                                                          
+;                                                                             
+LHS PHE=EXP(PHLE1)*PHE(-4);                                                   
+2SLS;
+SMPL 1962.1 2016.4;
+EST 351 PLOT=8;
+SMPL 1979.1 2016.4;
+EST 352 PLOT=8;
+SMPL 1979.1 2016.4;
+EST 355 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 357 PLOT=8;
+END;
+@ TH BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT THM10$=THPSI1*(THIM/(THE10*THPM10));
+IDENT THEX=(THX10$*THE10*THPX10)/THPSI2;
+IDENT THY=THC+THI+THGG+THEX-THIM+THSTAT+THV1;
+IDENT THH=THE/GEEA;
+IDENT THPM=THPSI3*THPMP;
+IDENT THPX$=(THE10/THE)*THPX;
+IDENT THZZ=LOG(THY)-LOG(THYS);
+IDENT THJMIN=THY/THLAM;
+IDENT THUR=(THL1-THJ)/THL1;
+@
+GENR THLIMZ=LOG(THIM/THPOP);                                                  
+GENR THLCIGZ=LOG((THC+THI+THGG)/THPOP);                                        
+GENR THLPYZZ=LOG(THPY/    THPM);                                              
+GENR THLCZ=LOG(THC/THPOP);                                                    
+GENR THLYZ=LOG(THY/THPOP);                                                    
+GENR THLI=LOG(THI);                                                           
+GENR THLY=LOG(THY);                                                           
+GENR THLPY=LOG(THPY);                                                         
+GENR THLPM=LOG(THPM);                                                         
+GENR THPCPY=100*((THPY/THPY(-4))**1-1);                                       
+GENR THRBZ=      THRB-    THRS(-4);                                           
+GENR THRBZZ=     THRB(-4)-THRS(-4);                                           
+GENR THRSZ=      THRS-    THRS(-4);                                           
+GENR THLPXA=LOG(THPX/(THPW$*(THE/THE10)));
+GENR THLPXB=LOG(THPY/(THPW$*(THE/THE10)));
+GENR THLGZ=LOG(THGG/THPOP);                                                  
+GENR THLEXZ=LOG(THEX/THPOP);                                                
+@
+EQ 361 THLIMZ C THLIMZ(-4) THLCIGZ 
+;                                          
+LHS THIM=EXP(THLIMZ)*THPOP;                                                   
+EQ 362 THLCZ C THLCZ(-4) THLYZ                                                
+;                                                                             
+LHS THC=EXP(THLCZ)*THPOP;                                                     
+EQ 364 THLPY THLPY(-4) C BET THLPM  THZZ(-4) 
+;                                                                             
+LHS THPY=EXP(THLPY);                                                          
+@@EQ 368 THLPXA THLPXB RHO=2
+@@;                                                  
+EQ 368  THLPXA;                                                               
+NLEQ THLPXA=COEF(1,368)*(THLPXB-COEF(2,368)*THLPXB(-4)-COEF(3,368)*THLPXB(-8))
+ +COEF(2,368)*THLPXA(-4)+COEF(3,368)*THLPXA(-8);                              
+LHS THPX=EXP(THLPXA)*(THPW$*(THE/THE10));                                     
+2SLS;
+SMPL 1972.1 2016.4;
+EST 361 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 362 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 364 PLOT=8;
+END;
+@ CH BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT CHM10$=CHPSI1*(CHIM/(CHE10*CHPM10));
+IDENT CHEX=(CHX10$*CHE10*CHPX10)/CHPSI2;
+IDENT CHY=CHC+CHI+CHG+CHEX-CHIM+CHSTAT+CHV1;
+IDENT CHH=CHE/GEEA;
+IDENT CHPM=CHPSI3*CHPMP;
+IDENT CHPX$=(CHE10/CHE)*CHPX;
+IDENT CHZZ=LOG(CHY)-LOG(CHYS);
+IDENT CHJMIN=CHY/CHLAM;
+IDENT CHUR=(CHL1-CHJ)/CHL1;
+@
+GENR CHLIMZ=LOG(CHIM/CHPOP);                                                  
+GENR CHLCIGZ=LOG((CHC+CHI+CHG)/CHPOP);                                        
+GENR CHLPYZZ=LOG(CHPY/    CHPM);                                              
+GENR CHLCZ=LOG(CHC/CHPOP);                                                    
+GENR CHLYZ=LOG(CHY/CHPOP);                                                    
+GENR CHLI=LOG(CHI);                                                           
+GENR CHLY=LOG(CHY);                                                           
+GENR CHLPY=LOG(CHPY);                                                         
+GENR CHLPM=LOG(CHPM);                                                         
+GENR CHPCPY=100*((CHPY/CHPY(-4))**1-1);                                       
+GENR CHRBZ=      CHRB-    CHRS(-4);                                           
+GENR CHRBZZ=     CHRB(-4)-CHRS(-4);                                           
+GENR CHRSZ=      CHRS-    CHRS(-4);                                           
+GENR CHLPXA=LOG(CHPX/(CHPW$*(CHE/CHE10)));
+GENR CHLPXB=LOG(CHPY/(CHPW$*(CHE/CHE10)));
+GENR CHLGZ=LOG(CHG/CHPOP);                                                  
+GENR CHLEXZ=LOG(CHEX/CHPOP);                                                
+@
+@ SPECIAL For MCYUAN Table 2
+@
+@GENR CHLIMZA=CHLIMZ-.2*CHLPYZZ;
+@EQ 371 CHLIMZA C CHLIMZ(-4) CHLCIGZ ;                                          
+@LHS CHIM=EXP(CHLIMZA+.2*CHLPYZZ)*CHPOP; 
+@
+EQ 371 CHLIMZ C CHLIMZ(-4) CHLCIGZ 
+;                                          
+LHS CHIM=EXP(CHLIMZ)*CHPOP;                                                   
+@
+@ END SPECIAL FOR MCYUAN Table 2
+@
+EQ 372 CHLCZ C CHLCZ(-4) CHLYZ 
+;                                                                             
+LHS CHC=EXP(CHLCZ)*CHPOP;                                                     
+EQ 373 CHLI C CHLI(-4) CHLY 
+;                                                                             
+LHS CHI=EXP(CHLI);                                                            
+EQ 374 CHLPY CHLPY(-4) C BET  CHZZ 
+;                                                       
+LHS CHPY=EXP(CHLPY);                                                          
+@ SPECIAL FOR MCYUAN
+@EQ 378 CHLPXA CHLPXB ;
+@COEF;
+@1 378 0.5
+@0
+@LHS CHPX=EXP(CHLPXA)*(CHPW$*(CHE/CHE10));                                     
+@ END SPECIAL FOR MCYUAN
+2SLS;
+SMPL 1982.1 2016.4;
+EST 371 PLOT=8;
+SMPL 1982.1 2016.4;
+EST 372 PLOT=8;
+SMPL 1982.1 2016.4;
+EST 373 PLOT=8;
+SMPL 1982.1 2016.4;
+EST 374 PLOT=8;
+END;
+@ AR BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT ARM10$=ARPSI1*(ARIM/(ARE10*ARPM10));
+IDENT AREX=(ARX10$*ARE10*ARPX10)/ARPSI2;
+IDENT ARY=ARC+ARI+ARG+AREX-ARIM+ARSTAT+ARV1;
+IDENT ARH=ARE/GEEA;
+IDENT ARPM=ARPSI3*ARPMP;
+IDENT ARPX$=(ARE10/ARE)*ARPX;
+IDENT ARZZ=LOG(ARY)-LOG(ARYS);
+IDENT ARJMIN=ARY/ARLAM;
+IDENT ARUR=(ARL1-ARJ)/ARL1;
+@
+GENR ARLIMZ=LOG(ARIM/ARPOP);                                                  
+GENR ARLCIGZ=LOG((ARC+ARI+ARG)/ARPOP);                                        
+GENR ARLPYZZ=LOG(ARPY/    ARPM);                                              
+GENR ARLCZ=LOG(ARC/ARPOP);                                                    
+GENR ARLYZ=LOG(ARY/ARPOP);                                                    
+GENR ARLI=LOG(ARI);                                                           
+GENR ARLY=LOG(ARY);                                                           
+GENR ARLPY=LOG(ARPY);                                                         
+GENR ARLPM=LOG(ARPM);                                                         
+GENR ARPCPY=100*((ARPY/ARPY(-4))**1-1);                                       
+GENR ARRBZ=      ARRB-    ARRS(-4);                                           
+GENR ARRBZZ=     ARRB(-4)-ARRS(-4);                                           
+GENR ARRSZ=      ARRS-    ARRS(-4);                                           
+GENR ARLPXA=LOG(ARPX/(ARPW$*(ARE/ARE10)));
+GENR ARLPXB=LOG(ARPY/(ARPW$*(ARE/ARE10)));
+GENR ARLGZ=LOG(ARG/ARPOP);                                                  
+GENR ARLEXZ=LOG(AREX/ARPOP);                                                
+@
+EQ 381 ARLIMZ C ARLIMZ(-4) ARLCIGZ 
+;                                          
+LHS ARIM=EXP(ARLIMZ)*ARPOP;                                                   
+EQ 382 ARLCZ C ARLCZ(-4) ARLYZ
+;                                                                             
+LHS ARC=EXP(ARLCZ)*ARPOP;                                                     
+2SLS;
+SMPL 1992.1 2016.4;
+EST 381 PLOT=8;
+SMPL 1992.1 2016.4;
+EST 382 PLOT=8;
+END;
+@ BR BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT BRM10$=BRPSI1*(BRIM/(BRE10*BRPM10));
+IDENT BREX=(BRX10$*BRE10*BRPX10)/BRPSI2;
+IDENT BRY=BRC+BRI+BRG+BREX-BRIM+BRSTAT+BRV1;
+IDENT BRH=BRE/GEEA;
+IDENT BRPM=BRPSI3*BRPMP;
+IDENT BRPX$=(BRE10/BRE)*BRPX;
+IDENT BRZZ=LOG(BRY)-LOG(BRYS);
+IDENT BRJMIN=BRY/BRLAM;
+IDENT BRUR=(BRL1-BRJ)/BRL1;
+@
+GENR BRLIMZ=LOG(BRIM/BRPOP);                                                  
+GENR BRLCIGZ=LOG((BRC+BRI+BRG)/BRPOP);                                        
+GENR BRLPYZZ=LOG(BRPY/    BRPM);                                              
+GENR BRLCZ=LOG(BRC/BRPOP);                                                    
+GENR BRLYZ=LOG(BRY/BRPOP);                                                    
+GENR BRLI=LOG(BRI);                                                           
+GENR BRLY=LOG(BRY);                                                           
+GENR BRLPY=LOG(BRPY);                                                         
+GENR BRLPM=LOG(BRPM);                                                         
+GENR BRPCPY=100*((BRPY/BRPY(-4))**1-1);                                       
+GENR BRRBZ=      BRRB-    BRRS(-4);                                           
+GENR BRRBZZ=     BRRB(-4)-BRRS(-4);                                           
+GENR BRRSZ=      BRRS-    BRRS(-4);                                           
+GENR BRLPXA=LOG(BRPX/(BRPW$*(BRE/BRE10)));
+GENR BRLPXB=LOG(BRPY/(BRPW$*(BRE/BRE10)));
+GENR BRLGZ=LOG(BRG/BRPOP);                                                  
+GENR BRLEXZ=LOG(BREX/BRPOP);                                                
+@
+EQ 391 BRLIMZ C BRLIMZ(-4) BRLCIGZ
+;                                           
+LHS BRIM=EXP(BRLIMZ)*BRPOP;                                                   
+EQ 392 BRLCZ C BRLCZ(-4) BRLYZ                                                
+;                                                                             
+LHS BRC=EXP(BRLCZ)*BRPOP;                                                     
+2SLS;
+SMPL 1997.1 2016.4;
+EST 391 PLOT=8;
+SMPL 1997.1 2016.4;
+EST 392 PLOT=8;
+END;
+@ CE BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT CEM10$=CEPSI1*(CEIM/(CEE10*CEPM10));
+IDENT CEEX=(CEX10$*CEE10*CEPX10)/CEPSI2;
+IDENT CEY=CEC+CEI+CEG+CEEX-CEIM+CESTAT+CEV1;
+IDENT CEH=CEE/GEEA;
+IDENT CEPM=CEPSI3*CEPMP;
+IDENT CEPX$=(CEE10/CEE)*CEPX;
+IDENT CEZZ=LOG(CEY)-LOG(CEYS);
+IDENT CEJMIN=CEY/CELAM;
+IDENT CEUR=(CEL1-CEJ)/CEL1;
+@
+GENR CELIMZ=LOG(CEIM/CEPOP);                                                  
+GENR CELCIGZ=LOG((CEC+CEI+CEG)/CEPOP);                                        
+GENR CELPYZZ=LOG(CEPY/    CEPM);                                              
+GENR CELCZ=LOG(CEC/CEPOP);                                                    
+GENR CELYZ=LOG(CEY/CEPOP);                                                    
+GENR CELI=LOG(CEI);                                                           
+GENR CELY=LOG(CEY);                                                           
+GENR CELPY=LOG(CEPY);                                                         
+GENR CELPM=LOG(CEPM);                                                         
+GENR CEPCPY=100*((CEPY/CEPY(-4))**1-1);                                       
+GENR CERBZ=      CERB-    CERS(-4);                                           
+GENR CERBZZ=     CERB(-4)-CERS(-4);                                           
+GENR CERSZ=      CERS-    CERS(-4);                                           
+GENR CELPXA=LOG(CEPX/(CEPW$*(CEE/CEE10)));
+GENR CELPXB=LOG(CEPY/(CEPW$*(CEE/CEE10)));
+GENR CELGZ=LOG(CEG/CEPOP);                                                  
+GENR CELEXZ=LOG(CEEX/CEPOP);                                                
+@
+EQ 401 CELIMZ C CELIMZ(-4) CELCIGZ 
+;                                          
+LHS CEIM=EXP(CELIMZ)*CEPOP;                                                   
+EQ 402 CELCZ C CELCZ(-4) CELYZ                                                
+;                                                                             
+LHS CEC=EXP(CELCZ)*CEPOP;                                                     
+2SLS;
+SMPL 1983.1 2016.4;
+EST 401 PLOT=8;
+SMPL 1983.1 2016.4;
+EST 402 PLOT=8;
+END;
+@ ME BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT MEM10$=MEPSI1*(MEIM/(MEE10*MEPM10));
+IDENT MEEX=(MEX10$*MEE10*MEPX10)/MEPSI2;
+IDENT MEY=MEC+MEI+MEG+MEEX-MEIM+MESTAT+MEV1;
+IDENT MEH=MEE/GEEA;
+IDENT MEPM=MEPSI3*MEPMP;
+IDENT MEPX$=(MEE10/MEE)*MEPX;
+IDENT MEZZ=LOG(MEY)-LOG(MEYS);
+IDENT MEJMIN=MEY/MELAM;
+IDENT MEUR=(MEL1-MEJ)/MEL1;
+@
+GENR MELIMZ=LOG(MEIM/MEPOP);                                                  
+GENR MELCIGZ=LOG((MEC+MEI+MEG)/MEPOP);                                        
+GENR MELPYZZ=LOG(MEPY/    MEPM);                                              
+GENR MELCZ=LOG(MEC/MEPOP);                                                    
+GENR MELYZ=LOG(MEY/MEPOP);                                                    
+GENR MELI=LOG(MEI);                                                           
+GENR MELY=LOG(MEY);                                                           
+GENR MELPY=LOG(MEPY);                                                         
+GENR MELPM=LOG(MEPM);                                                         
+GENR MEPCPY=100*((MEPY/MEPY(-4))**1-1);                                       
+GENR MERBZ=      MERB-    MERS(-4);                                           
+GENR MERBZZ=     MERB(-4)-MERS(-4);                                           
+GENR MERSZ=      MERS-    MERS(-4);                                           
+GENR MELPXA=LOG(MEPX/(MEPW$*(MEE/MEE10)));
+GENR MELPXB=LOG(MEPY/(MEPW$*(MEE/MEE10)));
+GENR MELJ1=LOG(MEJ/MEJ(-4));                                                  
+GENR MELY1=LOG(MEY/MEY(-4));                                                  
+GENR MELEXL=LOG(MEJ/MEJMIN);                                                  
+GENR MELL1Z=LOG(MEL1/MEPOP1);                                                 
+GENR MELGZ=LOG(MEG/MEPOP);                                                  
+GENR MELEXZ=LOG(MEEX/MEPOP);                                                
+@
+EQ 411 MELIMZ C MELIMZ(-4) MELPYZZ MELCIGZ
+;                                  
+LHS MEIM=EXP(MELIMZ)*MEPOP;                                                   
+EQ 412 MELCZ C MELCZ(-4) MELYZ                                                
+;                                                                             
+LHS MEC=EXP(MELCZ)*MEPOP;                                                     
+@@EQ 418 MELPXA MELPXB RHO=2
+@@;                                                  
+EQ 418 MELPXA;                                                               
+NLEQ MELPXA=COEF(1,418)*(MELPXB-COEF(2,418)*MELPXB(-4)-COEF(3,418)*MELPXB(-8))
+ +COEF(2,418)*MELPXA(-4)+COEF(3,418)*MELPXA(-8);                              
+LHS MEPX=EXP(MELPXA)*(MEPW$*(MEE/MEE10));                                     
+2SLS;
+SMPL 1972.1 2016.4;
+EST 411 PLOT=8;
+SMPL 1972.1 2016.4;
+EST 412 PLOT=8;
+END;
+@ PE BEGIN
+@
+SMPL 1960.1 2017.4;
+IDENT PEM10$=PEPSI1*(PEIM/(PEE10*PEPM10));
+IDENT PEEX=(PEX10$*PEE10*PEPX10)/PEPSI2;
+IDENT PEY=PEC+PEI+PEG+PEEX-PEIM+PESTAT+PEV1;
+IDENT PEH=PEE/GEEA;
+IDENT PEPM=PEPSI3*PEPMP;
+IDENT PEPX$=(PEE10/PEE)*PEPX;
+IDENT PEZZ=LOG(PEY)-LOG(PEYS);
+IDENT PEJMIN=PEY/PELAM;
+IDENT PEUR=(PEL1-PEJ)/PEL1;
+@
+GENR PELIMZ=LOG(PEIM/PEPOP);                                                  
+GENR PELCIGZ=LOG((PEC+PEI+PEG)/PEPOP);                                        
+GENR PELPYZZ=LOG(PEPY/    PEPM);                                              
+GENR PELCZ=LOG(PEC/PEPOP);                                                    
+GENR PELYZ=LOG(PEY/PEPOP);                                                    
+GENR PELI=LOG(PEI);                                                           
+GENR PELY=LOG(PEY);                                                           
+GENR PELPY=LOG(PEPY);                                                         
+GENR PELPM=LOG(PEPM);                                                         
+GENR PEPCPY=100*((PEPY/PEPY(-4))**1-1);                                       
+GENR PERBZ=      PERB-    PERS(-4);                                           
+GENR PERBZZ=     PERB(-4)-PERS(-4);                                           
+GENR PERSZ=      PERS-    PERS(-4);                                           
+GENR PELPXA=LOG(PEPX/(PEPW$*(PEE/PEE10)));
+GENR PELPXB=LOG(PEPY/(PEPW$*(PEE/PEE10)));
+GENR PELGZ=LOG(PEG/PEPOP);                                                  
+GENR PELEXZ=LOG(PEEX/PEPOP);                                                
+@
+EQ 421 PELIMZ C PELIMZ(-4) PELCIGZ
+;                                                      
+LHS PEIM=EXP(PELIMZ)*PEPOP;                                                   
+EQ 422 PELCZ C PELCZ(-4) PELYZ                                                
+;                                                                             
+LHS PEC=EXP(PELCZ)*PEPOP;                                                     
+2SLS;
+SMPL 1981.1 2016.4;
+EST 421 PLOT=8;
+SMPL 1981.1 2016.4;
+EST 422 PLOT=8;
+END;
+@
+@ Estimate nonlinear equations for equation 8:
+@                                                                             
+SETLA 119 188;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=188 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 198;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=198 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 218;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=218 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 238;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=238 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 258;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=258 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 268;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=268 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 328;
+ SMPL  1978.1  2016.4 ;                                                       
+NLOLS EQUATION=328 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 348;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=348 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.9
+.64
+-.41
+CREATEU;
+SETLA 119 368;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=368 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 418;
+ SMPL  1972.1  2016.4 ;                                                       
+NLOLS EQUATION=418 NCOEF=3 MAXITERS=200 FILESTART=KEYBOARD; 
+.5
+1.1
+-.1
+CREATEU;
+SETLA 119 0;
+@
+@ The following are tricks needed to link the annual and quarterly data.      
+@                                                                             
+SMPL 1960.1 2017.4;
+GENR VV1=BEE;                                                                 
+GENR BEEN=CC*VV1+CC(-1)*VV1(-1)+CC(-2)*VV1(-2)+CC(-3)*VV1(-3);                
+GENR BEEQ=(BEEN/BEEA)*BEEZ;                                                   
+GENR VV2=BEPX$;                                                                
+GENR BEPX$N=CC*VV2+CC(-1)*VV2(-1)+CC(-2)*VV2(-2)+CC(-3)*VV2(-3);               
+GENR BEPX$Q=(BEPX$N/BEPX$A)*BEPX$Z; 
+GENR VV3=BEM10$;                                                             
+GENR BEM10$N=CC*VV3+CC(-1)*VV3(-1)+CC(-2)*VV3(-2)+CC(-3)*VV3(-3);            
+GENR BEM10$Q=(BEM10$N/BEM10$A)*BEM10$Z;                                   
+GENR VV4=DEE;                                                                 
+GENR DEEN=CC*VV4+CC(-1)*VV4(-1)+CC(-2)*VV4(-2)+CC(-3)*VV4(-3);                
+GENR DEEQ=(DEEN/DEEA)*DEEZ;                                                   
+GENR VV5=DEPX$;                                                                
+GENR DEPX$N=CC*VV5+CC(-1)*VV5(-1)+CC(-2)*VV5(-2)+CC(-3)*VV5(-3);               
+GENR DEPX$Q=(DEPX$N/DEPX$A)*DEPX$Z;                                            
+GENR VV6=DEM10$;                                                             
+GENR DEM10$N=CC*VV6+CC(-1)*VV6(-1)+CC(-2)*VV6(-2)+CC(-3)*VV6(-3);            
+GENR DEM10$Q=(DEM10$N/DEM10$A)*DEM10$Z;                                   
+GENR VV7=NOE;                                                                 
+GENR NOEN=CC*VV7+CC(-1)*VV7(-1)+CC(-2)*VV7(-2)+CC(-3)*VV7(-3);                
+GENR NOEQ=(NOEN/NOEA)*NOEZ;                                                   
+GENR VV8=NOPX$;                                                                
+GENR NOPX$N=CC*VV8+CC(-1)*VV8(-1)+CC(-2)*VV8(-2)+CC(-3)*VV8(-3);               
+GENR NOPX$Q=(NOPX$N/NOPX$A)*NOPX$Z;                                            
+GENR VV9=NOM10$;                                                             
+GENR NOM10$N=CC*VV9+CC(-1)*VV9(-1)+CC(-2)*VV9(-2)+CC(-3)*VV9(-3);            
+GENR NOM10$Q=(NOM10$N/NOM10$A)*NOM10$Z;                                   
+GENR VV10=SWE;                                                                
+GENR SWEN=CC*VV10+CC(-1)*VV10(-1)+CC(-2)*VV10(-2)+CC(-3)*VV10(-3);            
+GENR SWEQ=(SWEN/SWEA)*SWEZ;                                                   
+GENR VV11=SWPX$;                                                               
+GENR SWPX$N=CC*VV11+CC(-1)*VV11(-1)+CC(-2)*VV11(-2)+CC(-3)*VV11(-3);           
+GENR SWPX$Q=(SWPX$N/SWPX$A)*SWPX$Z;                                            
+GENR VV12=SWM10$;                                                            
+GENR SWM10$N=CC*VV12+CC(-1)*VV12(-1)+CC(-2)*VV12(-2)+CC(-3)*VV12(-3);        
+GENR SWM10$Q=(SWM10$N/SWM10$A)*SWM10$Z;                                   
+GENR VV13=GRE;                                                                
+GENR GREN=CC*VV13+CC(-1)*VV13(-1)+CC(-2)*VV13(-2)+CC(-3)*VV13(-3);            
+GENR GREQ=(GREN/GREA)*GREZ;                                                   
+GENR VV14=GRPX$;                                                               
+GENR GRPX$N=CC*VV14+CC(-1)*VV14(-1)+CC(-2)*VV14(-2)+CC(-3)*VV14(-3);           
+GENR GRPX$Q=(GRPX$N/GRPX$A)*GRPX$Z;                                            
+GENR VV15=GRM10$;                                                            
+GENR GRM10$N=CC*VV15+CC(-1)*VV15(-1)+CC(-2)*VV15(-2)+CC(-3)*VV15(-3);        
+GENR GRM10$Q=(GRM10$N/GRM10$A)*GRM10$Z;                                   
+GENR VV16=IRE;                                                                
+GENR IREN=CC*VV16+CC(-1)*VV16(-1)+CC(-2)*VV16(-2)+CC(-3)*VV16(-3);            
+GENR IREQ=(IREN/IREA)*IREZ;                                                   
+GENR VV17=IRPX$;                                                               
+GENR IRPX$N=CC*VV17+CC(-1)*VV17(-1)+CC(-2)*VV17(-2)+CC(-3)*VV17(-3);           
+GENR IRPX$Q=(IRPX$N/IRPX$A)*IRPX$Z;                                            
+GENR VV18=IRM10$;                                                            
+GENR IRM10$N=CC*VV18+CC(-1)*VV18(-1)+CC(-2)*VV18(-2)+CC(-3)*VV18(-3);        
+GENR IRM10$Q=(IRM10$N/IRM10$A)*IRM10$Z;                                   
+GENR VV19=POE;                                                                
+GENR POEN=CC*VV19+CC(-1)*VV19(-1)+CC(-2)*VV19(-2)+CC(-3)*VV19(-3);            
+GENR POEQ=(POEN/POEA)*POEZ;                                                   
+GENR VV20=POPX$;                                                               
+GENR POPX$N=CC*VV20+CC(-1)*VV20(-1)+CC(-2)*VV20(-2)+CC(-3)*VV20(-3);           
+GENR POPX$Q=(POPX$N/POPX$A)*POPX$Z;                                            
+GENR VV21=POM10$;                                                            
+GENR POM10$N=CC*VV21+CC(-1)*VV21(-1)+CC(-2)*VV21(-2)+CC(-3)*VV21(-3);        
+GENR POM10$Q=(POM10$N/POM10$A)*POM10$Z;                                   
+GENR VV22=SPE;                                                                
+GENR SPEN=CC*VV22+CC(-1)*VV22(-1)+CC(-2)*VV22(-2)+CC(-3)*VV22(-3);            
+GENR SPEQ=(SPEN/SPEA)*SPEZ;                                                   
+GENR VV23=SPPX$;                                                               
+GENR SPPX$N=CC*VV23+CC(-1)*VV23(-1)+CC(-2)*VV23(-2)+CC(-3)*VV23(-3);           
+GENR SPPX$Q=(SPPX$N/SPPX$A)*SPPX$Z;                                            
+GENR VV24=SPM10$;                                                            
+GENR SPM10$N=CC*VV24+CC(-1)*VV24(-1)+CC(-2)*VV24(-2)+CC(-3)*VV24(-3);        
+GENR SPM10$Q=(SPM10$N/SPM10$A)*SPM10$Z;                                   
+GENR VV25=NZE;                                                                
+GENR NZEN=CC*VV25+CC(-1)*VV25(-1)+CC(-2)*VV25(-2)+CC(-3)*VV25(-3);            
+GENR NZEQ=(NZEN/NZEA)*NZEZ;                                                   
+GENR VV26=NZPX$;                                                               
+GENR NZPX$N=CC*VV26+CC(-1)*VV26(-1)+CC(-2)*VV26(-2)+CC(-3)*VV26(-3);           
+GENR NZPX$Q=(NZPX$N/NZPX$A)*NZPX$Z;                                            
+GENR VV27=NZM10$;                                                            
+GENR NZM10$N=CC*VV27+CC(-1)*VV27(-1)+CC(-2)*VV27(-2)+CC(-3)*VV27(-3);        
+GENR NZM10$Q=(NZM10$N/NZM10$A)*NZM10$Z;                                   
+GENR VV28=SAE;                                                                
+GENR SAEN=CC*VV28+CC(-1)*VV28(-1)+CC(-2)*VV28(-2)+CC(-3)*VV28(-3);            
+GENR SAEQ=(SAEN/SAEA)*SAEZ;                                                   
+GENR VV29=SAPX$;                                                               
+GENR SAPX$N=CC*VV29+CC(-1)*VV29(-1)+CC(-2)*VV29(-2)+CC(-3)*VV29(-3);           
+GENR SAPX$Q=(SAPX$N/SAPX$A)*SAPX$Z;                                            
+GENR VV30=SAM10$;                                                            
+GENR SAM10$N=CC*VV30+CC(-1)*VV30(-1)+CC(-2)*VV30(-2)+CC(-3)*VV30(-3);        
+GENR SAM10$Q=(SAM10$N/SAM10$A)*SAM10$Z;                                   
+GENR VV34=COE;                                                                
+GENR COEN=CC*VV34+CC(-1)*VV34(-1)+CC(-2)*VV34(-2)+CC(-3)*VV34(-3);            
+GENR COEQ=(COEN/COEA)*COEZ;                                                   
+GENR VV35=COPX$;                                                               
+GENR COPX$N=CC*VV35+CC(-1)*VV35(-1)+CC(-2)*VV35(-2)+CC(-3)*VV35(-3);           
+GENR COPX$Q=(COPX$N/COPX$A)*COPX$Z;                                            
+GENR VV36=COM10$;                                                            
+GENR COM10$N=CC*VV36+CC(-1)*VV36(-1)+CC(-2)*VV36(-2)+CC(-3)*VV36(-3);        
+GENR COM10$Q=(COM10$N/COM10$A)*COM10$Z;                                   
+GENR VV37=JOE;                                                                
+GENR JOEN=CC*VV37+CC(-1)*VV37(-1)+CC(-2)*VV37(-2)+CC(-3)*VV37(-3);            
+GENR JOEQ=(JOEN/JOEA)*JOEZ;                                                   
+GENR VV38=JOPX$;                                                               
+GENR JOPX$N=CC*VV38+CC(-1)*VV38(-1)+CC(-2)*VV38(-2)+CC(-3)*VV38(-3);           
+GENR JOPX$Q=(JOPX$N/JOPX$A)*JOPX$Z;                                            
+GENR VV39=JOM10$;                                                            
+GENR JOM10$N=CC*VV39+CC(-1)*VV39(-1)+CC(-2)*VV39(-2)+CC(-3)*VV39(-3);        
+GENR JOM10$Q=(JOM10$N/JOM10$A)*JOM10$Z;                                   
+GENR VV43=IDE;                                                                
+GENR IDEN=CC*VV43+CC(-1)*VV43(-1)+CC(-2)*VV43(-2)+CC(-3)*VV43(-3);            
+GENR IDEQ=(IDEN/IDEA)*IDEZ;                                                   
+GENR VV44=IDPX$;                                                               
+GENR IDPX$N=CC*VV44+CC(-1)*VV44(-1)+CC(-2)*VV44(-2)+CC(-3)*VV44(-3);           
+GENR IDPX$Q=(IDPX$N/IDPX$A)*IDPX$Z;                                            
+GENR VV45=IDM10$;                                                            
+GENR IDM10$N=CC*VV45+CC(-1)*VV45(-1)+CC(-2)*VV45(-2)+CC(-3)*VV45(-3);        
+GENR IDM10$Q=(IDM10$N/IDM10$A)*IDM10$Z;                                   
+GENR VV46=MAE;                                                                
+GENR MAEN=CC*VV46+CC(-1)*VV46(-1)+CC(-2)*VV46(-2)+CC(-3)*VV46(-3);            
+GENR MAEQ=(MAEN/MAEA)*MAEZ;                                                   
+GENR VV47=MAPX$;                                                               
+GENR MAPX$N=CC*VV47+CC(-1)*VV47(-1)+CC(-2)*VV47(-2)+CC(-3)*VV47(-3);           
+GENR MAPX$Q=(MAPX$N/MAPX$A)*MAPX$Z;                                            
+GENR VV48=MAM10$;                                                            
+GENR MAM10$N=CC*VV48+CC(-1)*VV48(-1)+CC(-2)*VV48(-2)+CC(-3)*VV48(-3);        
+GENR MAM10$Q=(MAM10$N/MAM10$A)*MAM10$Z;                                   
+GENR VV49=PAE;                                                                
+GENR PAEN=CC*VV49+CC(-1)*VV49(-1)+CC(-2)*VV49(-2)+CC(-3)*VV49(-3);            
+GENR PAEQ=(PAEN/PAEA)*PAEZ;                                                   
+GENR VV50=PAPX$;                                                               
+GENR PAPX$N=CC*VV50+CC(-1)*VV50(-1)+CC(-2)*VV50(-2)+CC(-3)*VV50(-3);           
+GENR PAPX$Q=(PAPX$N/PAPX$A)*PAPX$Z;                                            
+GENR VV51=PAM10$;                                                            
+GENR PAM10$N=CC*VV51+CC(-1)*VV51(-1)+CC(-2)*VV51(-2)+CC(-3)*VV51(-3);        
+GENR PAM10$Q=(PAM10$N/PAM10$A)*PAM10$Z;                                   
+GENR VV52=PHE;                                                                
+GENR PHEN=CC*VV52+CC(-1)*VV52(-1)+CC(-2)*VV52(-2)+CC(-3)*VV52(-3);            
+GENR PHEQ=(PHEN/PHEA)*PHEZ;                                                   
+GENR VV53=PHPX$;                                                               
+GENR PHPX$N=CC*VV53+CC(-1)*VV53(-1)+CC(-2)*VV53(-2)+CC(-3)*VV53(-3);           
+GENR PHPX$Q=(PHPX$N/PHPX$A)*PHPX$Z;                                            
+GENR VV54=PHM10$;                                                            
+GENR PHM10$N=CC*VV54+CC(-1)*VV54(-1)+CC(-2)*VV54(-2)+CC(-3)*VV54(-3);        
+GENR PHM10$Q=(PHM10$N/PHM10$A)*PHM10$Z;                                   
+GENR VV55=THE;                                                                
+GENR THEN=CC*VV55+CC(-1)*VV55(-1)+CC(-2)*VV55(-2)+CC(-3)*VV55(-3);            
+GENR THEQ=(THEN/THEA)*THEZ;                                                   
+GENR VV56=THPX$;                                                               
+GENR THPX$N=CC*VV56+CC(-1)*VV56(-1)+CC(-2)*VV56(-2)+CC(-3)*VV56(-3);           
+GENR THPX$Q=(THPX$N/THPX$A)*THPX$Z;                                            
+GENR VV57=THM10$;                                                            
+GENR THM10$N=CC*VV57+CC(-1)*VV57(-1)+CC(-2)*VV57(-2)+CC(-3)*VV57(-3);        
+GENR THM10$Q=(THM10$N/THM10$A)*THM10$Z;                                   
+GENR VV58=CHE;                                                                
+GENR CHEN=CC*VV58+CC(-1)*VV58(-1)+CC(-2)*VV58(-2)+CC(-3)*VV58(-3);            
+GENR CHEQ=(CHEN/CHEA)*CHEZ;                                                   
+GENR VV59=CHPX$;                                                               
+GENR CHPX$N=CC*VV59+CC(-1)*VV59(-1)+CC(-2)*VV59(-2)+CC(-3)*VV59(-3);           
+GENR CHPX$Q=(CHPX$N/CHPX$A)*CHPX$Z;                                            
+GENR VV60=CHM10$;                                                            
+GENR CHM10$N=CC*VV60+CC(-1)*VV60(-1)+CC(-2)*VV60(-2)+CC(-3)*VV60(-3);        
+GENR CHM10$Q=(CHM10$N/CHM10$A)*CHM10$Z;                                   
+GENR VV61=ARE;                                                                
+GENR AREN=CC*VV61+CC(-1)*VV61(-1)+CC(-2)*VV61(-2)+CC(-3)*VV61(-3);            
+GENR AREQ=(AREN/AREA)*AREZ;                                                   
+GENR VV62=ARPX$;                                                               
+GENR ARPX$N=CC*VV62+CC(-1)*VV62(-1)+CC(-2)*VV62(-2)+CC(-3)*VV62(-3);           
+GENR ARPX$Q=(ARPX$N/ARPX$A)*ARPX$Z;                                            
+GENR VV63=ARM10$;                                                            
+GENR ARM10$N=CC*VV63+CC(-1)*VV63(-1)+CC(-2)*VV63(-2)+CC(-3)*VV63(-3);        
+GENR ARM10$Q=(ARM10$N/ARM10$A)*ARM10$Z;                                   
+GENR VV64=BRE;                                                                
+GENR BREN=CC*VV64+CC(-1)*VV64(-1)+CC(-2)*VV64(-2)+CC(-3)*VV64(-3);            
+GENR BREQ=(BREN/BREA)*BREZ;                                                   
+GENR VV65=BRPX$;                                                               
+GENR BRPX$N=CC*VV65+CC(-1)*VV65(-1)+CC(-2)*VV65(-2)+CC(-3)*VV65(-3);           
+GENR BRPX$Q=(BRPX$N/BRPX$A)*BRPX$Z;                                            
+GENR VV66=BRM10$;                                                            
+GENR BRM10$N=CC*VV66+CC(-1)*VV66(-1)+CC(-2)*VV66(-2)+CC(-3)*VV66(-3);        
+GENR BRM10$Q=(BRM10$N/BRM10$A)*BRM10$Z;                                   
+GENR VV67=CEE;                                                                
+GENR CEEN=CC*VV67+CC(-1)*VV67(-1)+CC(-2)*VV67(-2)+CC(-3)*VV67(-3);            
+GENR CEEQ=(CEEN/CEEA)*CEEZ;                                                   
+GENR VV68=CEPX$;                                                               
+GENR CEPX$N=CC*VV68+CC(-1)*VV68(-1)+CC(-2)*VV68(-2)+CC(-3)*VV68(-3);           
+GENR CEPX$Q=(CEPX$N/CEPX$A)*CEPX$Z;                                            
+GENR VV69=CEM10$;                                                            
+GENR CEM10$N=CC*VV69+CC(-1)*VV69(-1)+CC(-2)*VV69(-2)+CC(-3)*VV69(-3);        
+GENR CEM10$Q=(CEM10$N/CEM10$A)*CEM10$Z;                                   
+GENR VV70=MEE;                                                                
+GENR MEEN=CC*VV70+CC(-1)*VV70(-1)+CC(-2)*VV70(-2)+CC(-3)*VV70(-3);            
+GENR MEEQ=(MEEN/MEEA)*MEEZ;                                                   
+GENR VV71=MEPX$;                                                               
+GENR MEPX$N=CC*VV71+CC(-1)*VV71(-1)+CC(-2)*VV71(-2)+CC(-3)*VV71(-3);           
+GENR MEPX$Q=(MEPX$N/MEPX$A)*MEPX$Z;                                            
+GENR VV72=MEM10$;                                                            
+GENR MEM10$N=CC*VV72+CC(-1)*VV72(-1)+CC(-2)*VV72(-2)+CC(-3)*VV72(-3);        
+GENR MEM10$Q=(MEM10$N/MEM10$A)*MEM10$Z;                                   
+GENR VV73=PEE;                                                                
+GENR PEEN=CC*VV73+CC(-1)*VV73(-1)+CC(-2)*VV73(-2)+CC(-3)*VV73(-3);            
+GENR PEEQ=(PEEN/PEEA)*PEEZ;                                                   
+GENR VV74=PEPX$;                                                               
+GENR PEPX$N=CC*VV74+CC(-1)*VV74(-1)+CC(-2)*VV74(-2)+CC(-3)*VV74(-3);           
+GENR PEPX$Q=(PEPX$N/PEPX$A)*PEPX$Z;                                            
+GENR VV75=PEM10$;                                                            
+GENR PEM10$N=CC*VV75+CC(-1)*VV75(-1)+CC(-2)*VV75(-2)+CC(-3)*VV75(-3);        
+GENR PEM10$Q=(PEM10$N/PEM10$A)*PEM10$Z;                                   
+@                                                                             
+@ End of tricks.                                                              
+@                                                                             
+SMPL 1960.1 2025.4;
+CREATE SUMUS=1;                                                               
+CREATE SUMCA=1;                                                               
+CREATE SUMJA=1;                                                               
+CREATE SUMAU=1;                                                               
+CREATE SUMFR=1;                                                               
+CREATE SUMGE=1;                                                               
+CREATE SUMIT=1;                                                               
+CREATE SUMNE=1;                                                               
+CREATE SUMST=1;                                                               
+CREATE SUMUK=1;                                                               
+CREATE SUMFI=1;                                                               
+CREATE SUMAS=1;                                                               
+CREATE SUMSO=1;                                                               
+CREATE SUMKO=1;                                                               
+CREATE SUMBE=1;                                                               
+CREATE SUMDE=1;                                                               
+CREATE SUMNO=1;                                                               
+CREATE SUMSW=1;                                                               
+CREATE SUMGR=1;                                                               
+CREATE SUMIR=1;                                                               
+CREATE SUMPO=1;                                                               
+CREATE SUMSP=1;                                                               
+CREATE SUMNZ=1;                                                               
+CREATE SUMSA=1;                                                               
+CREATE SUMCO=1;                                                               
+CREATE SUMJO=1;                                                               
+CREATE SUMID=1;                                                               
+CREATE SUMMA=1;                                                               
+CREATE SUMPA=1;                                                               
+CREATE SUMPH=1;                                                               
+CREATE SUMTH=1;                                                               
+CREATE SUMCH=1;                                                               
+CREATE SUMAR=1;                                                               
+CREATE SUMBR=1;                                                               
+CREATE SUMCE=1;                                                               
+CREATE SUMME=1;                                                               
+CREATE SUMPE=1;                                                               
+CREATE SUMTU=1;                                                               
+CREATE SUMPD=1;                                                               
+CREATE SUMRU=1;                                                               
+CREATE SUMUE=1;                                                               
+CREATE SUMEG=1;                                                               
+CREATE SUMIS=1;                                                               
+CREATE SUMKE=1;                                                               
+CREATE SUMBA=1;                                                               
+CREATE SUMHK=1;                                                               
+CREATE SUMSI=1;                                                               
+CREATE SUMVI=1;                                                               
+CREATE SUMNI=1;                                                               
+CREATE SUMAL=1;                                                               
+CREATE SUMIA=1;                                                               
+CREATE SUMIN=1;                                                               
+CREATE SUMIQ=1;                                                               
+CREATE SUMKU=1;                                                               
+CREATE SUMLI=1;                                                               
+CREATE SUMUA=1;                                                               
+CREATE SUMAO=1;                                                               
+@
+SMPL 1960.1 2025.4;
+LOADDATA FILE=SHRDDD.DAT;
+SMPL 2014.1 2016.4;
+PRINTVAR USPMM CAPMM FRPMM BEPMM PEPMM;
+@
+@ Begin trade share commands                                                  
+@                                                                             
+@  USPMM through AOPMM                                                        
+@                                                                             
+INPUT FILE=MCSHR1.INP;                                                          
+@                                                                             
+@  Set up trade share equations, generate PJAUS, etc., estimate equations.    
+@                                                                             
+SMPL 2014.1 2016.4;
+PRINTVAR USPMM CAPMM FRPMM BEPMM PEPMM;
+INPUT FILE=SHR.INP;
+@
+SMPL 1952.1 2025.4;
+@                                                                             
+@  Summation of alphas, divide by sums, compute PMP, X10$, and PW$            
+@                                                                             
+INPUT FILE=MCSHR2.INP;
+@
+@ Begin XX10$ij                                                               
+@                                                                             
+INPUT FILE=MCXX10.INP;                                                          
+@                                                                             
+@ End XX10$ij                                                                 
+@
+@ IF MCFORE OR MCCRI2 DON'T SETLA 118 0;
+SETLA 118 0;
+@ IF MCEURO OR MCFORE OR MCMPRU (for some) OR MCFEDR OR 
+@  MCSTIM (for some) OR MCCRIS OR MCCRI2
+@  DON'T DO ZEROU.  
+SMPL 1960.1 2025.4;
+ZEROU;
+@ 
+@ Work for FP distribution
+@
+SMPL 1952.1 2025.4;
+INPUT FILE=MCEXGSHR.INP;
+INPUT FILE=MCEXGSTR.INP;
+SMPL 1990.1 1995.4;
+RMSE DYNAMIC FILEVAR=PRINT.VAR;
+QUIT;
